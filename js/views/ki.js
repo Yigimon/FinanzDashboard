@@ -26,12 +26,7 @@
 </div>
 <p id="ki-status" class="subtext" style="margin:8px 0 0;"></p>
 </div>
-<div class="list" style="gap:8px;margin-bottom:14px;">
-<button class="kibtn" data-ki="tipps"><i class="ti ti-bulb" aria-hidden="true" style="font-size:17px;color:var(--warn);"></i> Erstelle mir personalisierte Spartipps auf Basis meiner Daten</button>
-<button class="kibtn" data-ki="analyse"><i class="ti ti-report-analytics" aria-hidden="true" style="font-size:17px;color:var(--accent);"></i> Analysiere meine Ausgaben und finde Auffälligkeiten</button>
-<button class="kibtn" data-ki="monatsbericht"><i class="ti ti-file-text" aria-hidden="true" style="font-size:17px;color:var(--pos);"></i> Schreibe mir einen Monatsbericht</button>
-<button class="kibtn" data-ki="depot"><i class="ti ti-trending-up" aria-hidden="true" style="font-size:17px;color:var(--violet);"></i> Bewerte meine Depot-Aufteilung und Sparraten</button>
-</div>
+<div id="ki-suggestions" class="list" style="gap:8px;margin-bottom:14px;"></div>
 <div id="ki-log" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
 <div style="display:flex;gap:8px;align-items:flex-end;">
 <textarea id="ki-input" rows="2" placeholder="Eigene Frage, z. B.: Wie viel gebe ich pro Jahr für Mobilität aus?" style="flex:1;resize:vertical;"></textarea>
@@ -64,16 +59,11 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
     });
     el.addEventListener('click', e => {
-      const kb = e.target.closest('[data-ki]');
+      const kb = e.target.closest('[data-prompt]');
       if (!kb) return;
-      const map = {
-        tipps: 'Erstelle mir personalisierte, konkrete Spartipps auf Basis meiner Daten. Priorisiere nach Einsparpotenzial.',
-        analyse: 'Analysiere meine Ausgaben gründlich: Auffälligkeiten, Monatsvergleiche, Verhältnis Fixkosten zu variablen Kosten, Vergleich mit üblichen Richtwerten.',
-        monatsbericht: 'Schreibe mir einen kompakten Monatsbericht für den aktuellen Monat: Einnahmen, Ausgaben, Saldo, Besonderheiten, Ausblick.',
-        depot: 'Bewerte meine Depot-Aufteilung und Sparraten: Diversifikation, Verhältnis von Sparrate zu freiem Budget, realistische Rendite-Annahmen.'
-      };
-      ask(map[kb.dataset.ki]);
+      ask(kb.dataset.prompt);
     });
+    renderSuggestions();
   }
 
   function updateStatus(saved){
@@ -88,6 +78,76 @@
     } else {
       st.textContent = 'Hinterlege deinen API-Schlüssel, um den Assistenten zu nutzen.';
     }
+  }
+
+  function buildDynamicSuggestions(){
+    const suggestions = [];
+    const expenses = FC.state.items.filter(i => i.type !== 'in');
+    const catSum = expenses.reduce((acc, item) => {
+      const cat = item.cat || 'Sonstiges';
+      acc[cat] = (acc[cat] || 0) + item.amount;
+      return acc;
+    }, {});
+    const sortedCats = Object.entries(catSum).sort((a, b) => b[1] - a[1]);
+
+    if (sortedCats.length) {
+      const [topCat] = sortedCats[0];
+      suggestions.push({
+        label: `Prüfe meine Ausgaben in "${topCat}" und nenne konkrete Einsparmöglichkeiten.`,
+        prompt: `Analysiere meine Ausgaben in der Kategorie "${topCat}" und nenne konkrete Einsparpotenziale in dieser Kategorie im Verhältnis zu meinen anderen Ausgaben.`
+      });
+      if (sortedCats.length > 1) {
+        const [secondCat] = sortedCats[1];
+        suggestions.push({
+          label: `Vergleiche "${topCat}" mit "${secondCat}" und finde das größte Sparpotenzial.`,
+          prompt: `Vergleiche meine Ausgaben in den Kategorien "${topCat}" und "${secondCat}" und nenne, wo ich am schnellsten sparen kann.`
+        });
+      }
+    }
+
+    if (FC.state.goals.length) {
+      const goal = FC.state.goals[0];
+      suggestions.push({
+        label: `Wie erreiche ich das Ziel "${goal.name}" schneller?`,
+        prompt: `Mein Sparziel heißt "${goal.name}". Analysiere meinen aktuellen Stand und schlage konkrete Maßnahmen vor, um das Ziel schneller zu erreichen.`
+      });
+    }
+
+    if (FC.state.positions.length) {
+      suggestions.push({
+        label: 'Bewerte mein Depot und nenne mögliche Verbesserungen.',
+        prompt: 'Bewerte meine Depot-Aufteilung und nenne mögliche Verbesserungen, Diversifikation und Sparraten.'
+      });
+    }
+
+    const liquid = Number(FC.state.settings.liquid) || 0;
+    if (liquid > 0 && liquid < 2000) {
+      suggestions.push({
+        label: 'Wie kann ich mein verfügbares Guthaben verbessern?',
+        prompt: 'Gib mir konkrete Tipps, wie ich mein verfügbares Guthaben verbessern kann, unter Berücksichtigung meiner aktuellen Einnahmen und Ausgaben.'
+      });
+    }
+
+    return suggestions.slice(0, 4);
+  }
+
+  function renderSuggestions(){
+    const container = document.getElementById('ki-suggestions');
+    container.innerHTML = '';
+    const staticPrompts = [
+      { label:'Erstelle mir personalisierte Spartipps auf Basis meiner Daten', prompt:'Erstelle mir personalisierte, konkrete Spartipps auf Basis meiner Daten. Priorisiere nach Einsparpotenzial.' },
+      { label:'Analysiere meine Ausgaben und finde Auffälligkeiten', prompt:'Analysiere meine Ausgaben gründlich: Auffälligkeiten, Monatsvergleiche, Verhältnis Fixkosten zu variablen Kosten, Vergleich mit üblichen Richtwerten.' },
+      { label:'Schreibe mir einen kompakten Monatsbericht', prompt:'Schreibe mir einen kompakten Monatsbericht für den aktuellen Monat: Einnahmen, Ausgaben, Saldo, Besonderheiten, Ausblick.' },
+      { label:'Bewerte meine Depot-Aufteilung und Sparraten', prompt:'Bewerte meine Depot-Aufteilung und Sparraten: Diversifikation, Verhältnis von Sparrate zu freiem Budget, realistische Rendite-Annahmen.' }
+    ];
+    const dynamic = buildDynamicSuggestions();
+    [...staticPrompts, ...dynamic].forEach(item => {
+      const btn = document.createElement('button');
+      btn.className = 'kibtn';
+      btn.textContent = item.label;
+      btn.dataset.prompt = item.prompt;
+      container.appendChild(btn);
+    });
   }
 
   function fdata(){

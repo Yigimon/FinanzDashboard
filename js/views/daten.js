@@ -36,10 +36,8 @@
       });
     } catch (e) { /* ignore */ }
   }
-  // API-Schlüssel bleibt bewusst außen vor — er gehört nicht in Export-Dateien
   function payload(){
     const s = Object.assign({}, FC.state.settings);
-    delete s.apiKey;
     return JSON.stringify({ app:'finanz-cockpit', version:1, exportiert:new Date().toISOString(),
       items:FC.state.items, cats:FC.state.cats, positions:FC.state.positions,
       goals:FC.state.goals, history:FC.state.history, years:FC.state.years, settings:s }, null, 2);
@@ -139,7 +137,7 @@
     el.innerHTML = `
 <div class="card" style="margin-bottom:14px;">
 <p class="sechead" style="margin:0 0 8px;"><i class="ti ti-database-export" aria-hidden="true" style="color:var(--accent);"></i> Sichern und übertragen</p>
-<p class="subtext">Sichert <b>alles</b>: Posten, Kategorien, Depot, Ziele, Budgets, die <b>komplette Monats-Historie</b> und <b>abgeschlossene Jahre</b> (fortlaufend, ohne Limit) sowie Einstellungen. Der API-Schlüssel wird aus Sicherheitsgründen nie mit exportiert.</p>
+<p class="subtext">Sichert <b>alles</b>: Posten, Kategorien, Depot, Ziele, Budgets, die <b>komplette Monats-Historie</b> und <b>abgeschlossene Jahre</b> (fortlaufend, ohne Limit) sowie Einstellungen. Dein API-Schlüssel wird jetzt mit in die JSON-Datei aufgenommen, damit die KI-Konfiguration beim Wiederimport vollständig wiederhergestellt wird.</p>
 <p id="dat-counts" class="subtext" style="margin:-4px 0 10px;"></p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;">
 <button id="dat-export"><i class="ti ti-download" aria-hidden="true"></i> Als JSON exportieren</button>
