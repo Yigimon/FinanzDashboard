@@ -26,7 +26,16 @@
       rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error);
     });
   }
-
+  async function clearBackupHandle(){
+    try {
+      await new Promise((res, rej) => {
+        const req = indexedDB.deleteDatabase('fc-backup');
+        req.onsuccess = res;
+        req.onerror = () => rej(req.error);
+        req.onblocked = res;
+      });
+    } catch (e) { /* ignore */ }
+  }
   // API-Schlüssel bleibt bewusst außen vor — er gehört nicht in Export-Dateien
   function payload(){
     const s = Object.assign({}, FC.state.settings);
@@ -161,9 +170,10 @@ ${fsSupport ? '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button id="dat
     document.getElementById('dat-counts').textContent =
       `Aktuell: ${FC.state.items.length} Posten, ${FC.state.history.length} Monate Historie, ${FC.state.years.length} abgeschlossene Jahre, ${FC.state.positions.length} Depot-Positionen — Dateigröße ≈ ${(bytes / 1024).toFixed(1)} KB.`;
     if (fsSupport) document.getElementById('dat-connect').addEventListener('click', connectBackup);
-    document.getElementById('dat-reset').addEventListener('click', () => {
+    document.getElementById('dat-reset').addEventListener('click', async () => {
       if (confirm('Wirklich alle Daten löschen? Das kann nicht rückgängig gemacht werden.')) {
         ['items','cats','positions','goals','history','years','settings'].forEach(k => localStorage.removeItem('fc:' + k));
+        await clearBackupHandle();
         location.reload();
       }
     });

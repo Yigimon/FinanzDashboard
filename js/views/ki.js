@@ -10,10 +10,16 @@
 <div class="card" style="margin-bottom:14px;">
 <p class="sechead" style="margin:0 0 8px;"><i class="ti ti-key" aria-hidden="true" style="color:var(--violet);"></i> API-Schlüssel</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-<input id="ki-key" type="password" placeholder="sk-ant-…" style="flex:1;min-width:180px;">
+<input id="ki-key" type="password" placeholder="API Key…" style="flex:1;min-width:180px;">
+<select id="ki-provider" style="width:auto;">
+<option value="anthropic">Anthropic</option>
+<option value="google">Google AI Studio</option>
+</select>
 <select id="ki-model" style="width:auto;">
-<option value="claude-haiku-4-5-20251001">Haiku (schnell, günstig)</option>
-<option value="claude-sonnet-5">Sonnet (gründlicher)</option>
+<option value="claude-haiku-4-5-20251001">Anthropic Haiku</option>
+<option value="claude-sonnet-5">Anthropic Sonnet</option>
+<option value="gemini-1.0-pro">Google Gemini 1.0 Pro</option>
+<option value="gemini-1.0-ultra">Google Gemini 1.0 Ultra</option>
 </select>
 <button id="ki-keysave">Speichern</button>
 </div>
@@ -60,10 +66,14 @@
   function updateStatus(saved){
     const st = document.getElementById('ki-status');
     if (FC.state.settings.apiKey) {
-      st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an die Claude-API (Modell: ' +
-        (FC.state.settings.model.includes('haiku') ? 'Haiku' : 'Sonnet') + '). Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
+      if (FC.state.settings.aiProvider === 'google') {
+        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
+      } else {
+        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an die Claude-API (Modell: ' +
+          (FC.state.settings.model.includes('haiku') ? 'Haiku' : 'Sonnet') + '). Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
+      }
     } else {
-      st.textContent = 'Hinterlege deinen Anthropic-API-Schlüssel (console.anthropic.com → API Keys), um den Assistenten zu nutzen.';
+      st.textContent = 'Hinterlege deinen API-Schlüssel, um den Assistenten zu nutzen.';
     }
   }
 
@@ -102,28 +112,42 @@
 
   async function ask(q){
     if (!FC.state.settings.apiKey) {
-      msg('err', 'Kein API-Schlüssel hinterlegt. Trage oben deinen Anthropic-Schlüssel ein und klicke auf Speichern.');
+      msg('err', 'Kein API-Schlüssel hinterlegt. Trage oben deinen API-Schlüssel ein und klicke auf Speichern.');
       return;
     }
     msg('user', q);
     const wait = msg('ai', 'Denke nach…');
     history.push({ role:'user', content:q });
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method:'POST',
-        headers:{ 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
-          'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
-        body: JSON.stringify({ model: FC.state.settings.model, max_tokens: 1500,
+      const provider = FC.state.settings.aiProvider || 'anthropic';
+      let url, headers, body;
+
+      if (provider === 'google') {
+        url = 'https://generativelanguage.googleapis.com/v1beta2/models/' + encodeURIComponent(FC.state.settings.model) + ':generateText';
+        headers = { 'content-type':'application/json', 'Authorization':'Bearer ' + FC.state.settings.apiKey };
+        body = JSON.stringify({
+          prompt: {
+            text: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() +
+              ' Antworte knapp, konkret und mit Zahlen aus den Daten. Nur Fließtext und einfache Aufzählungen, kein Markdown. Benutzerfrage: ' + q
+          }
+        });
+      } else {
+        url = 'https://api.anthropic.com/v1/messages';
+        headers = { 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
+          'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' };
+        body = JSON.stringify({ model: FC.state.settings.model, max_tokens: 1500,
           system: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() +
             ' Antworte knapp, konkret und mit Zahlen aus den Daten. Nur Fließtext und einfache Aufzählungen, kein Markdown.',
-          messages: history.slice(-10) })
-      });
+          messages: history.slice(-10) });
+      }
+
+      const res = await fetch(url, { method:'POST', headers, body });
       if (!res.ok) {
         const t = await res.text();
         throw new Error('HTTP ' + res.status + ' — ' + t.slice(0, 300));
       }
       const j = await res.json();
-      const txt = (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n') || '(leere Antwort)';
+      const txt = j.candidates?.[0]?.output || (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n') || j.output || '(leere Antwort)';
       history.push({ role:'assistant', content:txt });
       wait.textContent = txt;
     } catch (err) {

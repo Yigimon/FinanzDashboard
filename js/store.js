@@ -84,7 +84,7 @@ window.FC = (function () {
     goals: load('goals', seedGoals()),
     history: load('history', seedHistory()),
     years: load('years', []),
-    settings: Object.assign({apiKey:'', model:'claude-haiku-4-5-20251001', liquid:6500, budgets:{}, theme:'auto'}, load('settings', {}))
+    settings: Object.assign({apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid:6500, budgets:{}, theme:'auto'}, load('settings', {}))
   };
 
   // Migration: Einmalzahlungen älterer Stände bekommen volles Datum + Händler-Feld
