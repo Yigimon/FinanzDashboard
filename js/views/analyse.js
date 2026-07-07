@@ -242,11 +242,11 @@
     // Liquidität / Notgroschen
     const liquid = Number(FC.state.settings.liquid) || 0;
     document.getElementById('an-liquid').value = liquid;
-    const reichweite = aExp > 0 ? liquid / aExp : Infinity;
-    const ngPct = Math.min(100, Math.round(reichweite / 6 * 100));
+    const reichweite = aExp > 0 ? liquid / aExp : 0;
+    const ngPct = aExp > 0 ? Math.min(100, Math.round(reichweite / 6 * 100)) : 0;
     document.getElementById('an-liqtiles').innerHTML =
-      tile('Reichweite', isFinite(reichweite) ? (Math.round(reichweite * 10) / 10).toLocaleString('de-DE') + ' Monate' : '∞',
-        reichweite >= 6 ? 'pos' : reichweite >= 3 ? '' : 'neg', 'bei aktuellem Ausgabeverhalten') +
+      tile('Reichweite', aExp > 0 ? ((Math.round(reichweite * 10) / 10).toLocaleString('de-DE') + ' Monate') : '—',
+        aExp > 0 ? (reichweite >= 6 ? 'pos' : reichweite >= 3 ? '' : 'neg') : '', 'bei aktuellem Ausgabeverhalten') +
       tile('Notgroschen-Ziel', eur0(aExp * 6), '', '6 Monatsausgaben') +
       `<div class="tile"><p class="tl">Notgroschen-Fortschritt</p><p class="tv num">${ngPct} %</p>
 <span class="pbar"><span style="width:${ngPct}%;background:${ngPct >= 100 ? 'var(--pos)' : 'var(--accent)'};"></span></span></div>`;
