@@ -86,7 +86,8 @@
     const fq = inc > 0 ? fixExpense() / inc : 1;
     parts.push({ name:'Fixkostenquote', val: Math.max(0, Math.min(100, (1 - Math.max(0, fq - 0.3) / 0.4) * 100)), weight: 20,
       info: Math.round(fq * 100) + ' % (gut: unter 50 %)' });
-    parts.push({ name:'Cashflow', val: saldo > 0 ? Math.min(100, 60 + saldo / 10) : Math.max(0, 40 + saldo / 10), weight: 15,
+    const cashflow = (inc === 0 && exp === 0) ? 0 : (saldo > 0 ? Math.min(100, 60 + saldo / 10) : Math.max(0, 40 + saldo / 10));
+    parts.push({ name:'Cashflow', val: cashflow, weight: 15,
       info: (saldo >= 0 ? '+' : '') + Math.round(saldo) + ' € Ø/Monat' });
     const rate = FC.state.positions.reduce((a, p) => a + p.rate, 0);
     const kinds = new Set(FC.state.positions.map(p => p.kind)).size;

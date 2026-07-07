@@ -78,6 +78,7 @@ window.FC = (function () {
   }
 
   const useEmptyStartup = load('empty', false);
+  const defaultSettings = {apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid: useEmptyStartup ? 0 : 6500, budgets:{}, theme:'auto'};
 
   const state = {
     items: load('items', useEmptyStartup ? [] : seedItems()),
@@ -86,7 +87,7 @@ window.FC = (function () {
     goals: load('goals', []),
     history: load('history', []),
     years: load('years', []),
-    settings: Object.assign({apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid:6500, budgets:{}, theme:'auto'}, load('settings', {}))
+    settings: Object.assign({}, defaultSettings, load('settings', {}))
   };
 
   // Migration: Einmalzahlungen älterer Stände bekommen volles Datum + Händler-Feld
