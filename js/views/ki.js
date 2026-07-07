@@ -22,11 +22,13 @@
 <option value="claude-sonnet-5">Sonnet 5 — gründlich</option>
 </optgroup>
 <optgroup label="Google AI Studio">
-<option value="gemini-2.0-flash">Gemini 2.0 Flash — schnell ⚡</option>
-<option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash — sehr schnell ⚡⚡</option>
-<option value="gemini-2.5-pro-preview-06-05">Gemini 2.5 Pro — gründlich</option>
-<option value="gemini-1.5-flash">Gemini 1.5 Flash — stabil</option>
-<option value="gemini-1.5-pro">Gemini 1.5 Pro — stabil gründlich</option>
+<option value="gemini-2.5-flash">Gemini 2.5 Flash — empfohlen ⚡⚡</option>
+<option value="gemini-3.5-flash">Gemini 3.5 Flash — neuest ⚡⚡</option>
+<option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite — kostenlos ⚡⚡⚡</option>
+<option value="gemini-2.5-pro">Gemini 2.5 Pro — gründlich</option>
+<option value="gemini-2.0-flash">Gemini 2.0 Flash — stabil ⚡</option>
+<option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite — sehr schnell ⚡⚡</option>
+<option value="gemini-flash-latest">Gemini Flash Latest — immer aktuell</option>
 </optgroup>
 <optgroup label="Groq (OpenAI-kompatibel)">
 <option value="llama-3.3-70b-versatile">Llama 3.3 70B — kostenlos schnell</option>
@@ -53,13 +55,13 @@
     const validModels = [...modelSel.options].map(o => o.value);
     const savedModel = FC.state.settings.model;
     const provider = FC.state.settings.aiProvider || 'anthropic';
-    const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.0-flash', groq:'llama-3.3-70b-versatile' };
+    const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.5-flash', groq:'llama-3.3-70b-versatile' };
     modelSel.value = validModels.includes(savedModel) ? savedModel : (defaults[provider] || validModels[0]);
     updateStatus();
     document.getElementById('ki-provider').addEventListener('change', e => {
       const provider = e.target.value;
       const cur = document.getElementById('ki-model').value;
-      const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.0-flash', groq:'llama-3.3-70b-versatile' };
+      const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.5-flash', groq:'llama-3.3-70b-versatile' };
       const belongs = { anthropic: cur.startsWith('claude-'), google: cur.startsWith('gemini-'), groq: cur.startsWith('llama-') || cur.startsWith('mixtral-') || cur.startsWith('gemma') };
       if (!belongs[provider]) document.getElementById('ki-model').value = defaults[provider];
       updateStatus();
