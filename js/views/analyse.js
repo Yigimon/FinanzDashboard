@@ -237,6 +237,7 @@
 <span class="num" style="font-weight:600;min-width:88px;text-align:right;">${eur(vals[i])}</span></div>`;
     }).join('') + `<div style="border-top:1px solid var(--border);margin-top:4px;padding-top:8px;display:flex;font-size:13px;font-weight:600;"><span style="flex:1;">Gesamt</span><span class="num">${eur(total)}</span></div>`
       : '<p class="empty">Keine Daten im gewählten Zeitraum</p>';
+    document.getElementById('an-piewrap').classList.toggle('empty-data', !total);
 
     // Liquidität / Notgroschen
     const liquid = Number(FC.state.settings.liquid) || 0;

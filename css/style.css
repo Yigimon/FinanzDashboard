@@ -66,7 +66,10 @@ button.wide{width:100%}
 .itemcard .nm{display:block;font-size:14px;font-weight:600}
 .itemcard .sb{display:block;font-size:12px;color:var(--text2)}
 .list{display:flex;flex-direction:column;gap:8px}
-.empty{font-size:13px;color:var(--muted);margin:0;padding:14px;border:1px dashed var(--border-strong);border-radius:10px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:120px}
+.empty{font-size:13px;color:var(--muted);margin:0;padding:14px;border:1px dashed var(--border-strong);border-radius:10px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:120px;box-sizing:border-box}
+.piewrap.empty-data{grid-template-columns:1fr}
+.piewrap.empty-data .chartbox{display:none}
+.piewrap.empty-data #an-legend{min-height:180px;display:flex;align-items:center;justify-content:center}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;font-size:12px;color:var(--text2)}
 td{padding:9px 12px;text-align:right}
