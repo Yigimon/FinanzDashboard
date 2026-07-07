@@ -84,7 +84,13 @@
     document.getElementById('f-amount').value = it ? it.amount : '';
     document.getElementById('f-type').value = it ? it.type : 'out';
     fillCats();
-    document.getElementById('f-cat').value = it ? it.cat : FC.state.cats[0].n;
+    const defaultCat = it ? it.cat : (FC.state.cats.length ? FC.state.cats[0].n : '__new');
+    document.getElementById('f-cat').value = defaultCat;
+    if (defaultCat === '__new') {
+      document.getElementById('newcat-panel').style.display = 'block';
+      renderIcons();
+      document.getElementById('nc-name').focus();
+    }
     document.getElementById('f-interval').value = it ? String(it.interval) : '1';
     document.getElementById('f-ref').value = it && typeof it.interval === 'number' ? it.ref : curM;
     document.getElementById('f-once').value = it && it.date ? it.date : mkey(months[0]) + '-01';
