@@ -154,9 +154,9 @@ ${fsSupport ? '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button id="dat
 <p id="dat-status" class="subtext" style="margin:10px 0 0;"></p>
 </div>
 <div class="card">
-<p class="sechead" style="margin:0 0 8px;"><i class="ti ti-trash" aria-hidden="true" style="color:var(--neg);"></i> Zurücksetzen</p>
-<p class="subtext">Löscht alle Daten in diesem Browser und lädt die Beispieldaten neu. Vorher exportieren!</p>
-<button id="dat-reset">Alle Daten löschen</button>
+<p class="sechead" style="margin:0 0 8px;"><i class="ti ti-trash" aria-hidden="true" style="color:var(--neg);"></i> Daten zurücksetzen</p>
+<p class="subtext">Leert alle <b>eingetragenen Daten</b> (Posten, Depot, Ziele, Historie, abgeschlossene Jahre, Budgets, Guthaben). <b>Kategorien</b>, Theme und KI-Schlüssel bleiben erhalten. Vorher exportieren!</p>
+<button id="dat-reset">Eingetragene Daten zurücksetzen</button>
 </div>`;
 
     document.getElementById('dat-export').addEventListener('click', exportData);
@@ -169,8 +169,13 @@ ${fsSupport ? '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button id="dat
       `Aktuell: ${FC.state.items.length} Posten, ${FC.state.history.length} Monate Historie, ${FC.state.years.length} abgeschlossene Jahre, ${FC.state.positions.length} Depot-Positionen — Dateigröße ≈ ${(bytes / 1024).toFixed(1)} KB.`;
     if (fsSupport) document.getElementById('dat-connect').addEventListener('click', connectBackup);
     document.getElementById('dat-reset').addEventListener('click', async () => {
-      if (confirm('Wirklich alle Daten löschen? Das kann nicht rückgängig gemacht werden.')) {
-        ['items','cats','positions','goals','history','years','settings'].forEach(k => localStorage.removeItem('fc:' + k));
+      if (confirm('Alle eingetragenen Daten zurücksetzen? Kategorien, Theme und KI-Schlüssel bleiben erhalten. Das kann nicht rückgängig gemacht werden.')) {
+        // Kategorien behalten; KI-Konfiguration und Theme behalten; nur eintragbare Daten leeren
+        const keepCats = FC.state.cats;
+        const keepSettings = Object.assign({}, FC.state.settings, { liquid: 0, budgets: {} });
+        ['items','positions','goals','history','years'].forEach(k => localStorage.removeItem('fc:' + k));
+        localStorage.setItem('fc:cats', JSON.stringify(keepCats));
+        localStorage.setItem('fc:settings', JSON.stringify(keepSettings));
         localStorage.setItem('fc:empty', JSON.stringify(true));
         await clearBackupHandle();
         location.reload();

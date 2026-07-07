@@ -82,7 +82,8 @@ window.FC = (function () {
 
   const state = {
     items: load('items', useEmptyStartup ? [] : seedItems()),
-    cats: load('cats', useEmptyStartup ? [] : DEFAULT_CATS),
+    // Kategorien fallen immer auf die Standardliste zurück — nie leer, sonst lassen sich keine Posten anlegen
+    cats: load('cats', DEFAULT_CATS),
     positions: load('positions', []),
     goals: load('goals', []),
     history: load('history', []),
