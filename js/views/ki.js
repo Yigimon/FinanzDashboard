@@ -14,6 +14,7 @@
 <select id="ki-provider" style="width:auto;">
 <option value="anthropic">Anthropic</option>
 <option value="google">Google AI Studio</option>
+<option value="grok">Groq</option>
 </select>
 <select id="ki-model" style="width:auto;">
 <option value="claude-haiku-4-5-20251001">Anthropic Haiku</option>
@@ -21,6 +22,8 @@
 <option value="gemini-3.5-flash">Google Gemini 3.5 Flash</option>
 <option value="gemini-1.0-pro">Google Gemini 1.0 Pro</option>
 <option value="gemini-1.0-ultra">Google Gemini 1.0 Ultra</option>
+<option value="llama-3.3-70b-versatile">Groq Llama 3.3 70B Versatile</option>
+<option value="openai/gpt-oss-20b">Groq GPT-OSS 20B</option>
 </select>
 <button id="ki-keysave">Speichern</button>
 </div>
@@ -44,6 +47,12 @@
       }
       if (provider === 'anthropic' && FC.state.settings.model.startsWith('gemini-')) {
         document.getElementById('ki-model').value = 'claude-haiku-4-5-20251001';
+      }
+      if (provider === 'grok' && (FC.state.settings.model.startsWith('claude-') || FC.state.settings.model.startsWith('gemini-'))) {
+        document.getElementById('ki-model').value = 'llama-3.3-70b-versatile';
+      }
+      if ((provider === 'google' || provider === 'anthropic') && FC.state.settings.model.startsWith('openai/')) {
+        document.getElementById('ki-model').value = provider === 'google' ? 'gemini-3.5-flash' : 'claude-haiku-4-5-20251001';
       }
       updateStatus();
     });
@@ -70,8 +79,8 @@
     const st = document.getElementById('ki-status');
     if (FC.state.settings.apiKey) {
       if (FC.state.settings.aiProvider === 'google') {
-        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
-      } else {
+        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else if (FC.state.settings.aiProvider === 'grok') {
+        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Groq. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else {
         st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an die Claude-API (Modell: ' +
           (FC.state.settings.model.includes('haiku') ? 'Haiku' : 'Sonnet') + '). Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
       }
@@ -211,6 +220,16 @@
           }))
         ];
         body = JSON.stringify({ contents });
+      } else if (provider === 'grok') {
+        url = 'https://api.groq.com/openai/v1/chat/completions';
+        const apiKey = FC.state.settings.apiKey;
+        headers = { 'content-type':'application/json', 'Authorization': apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey };
+        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() + '\nAntworten sollen knapp, konkret und mit Zahlen aus den Daten sein. Nur Fließtext und einfache Aufzählungen, kein Markdown.';
+        const messages = [
+          { role: 'system', content: systemText },
+          ...history.map(entry => ({ role: entry.role, content: entry.content }))
+        ];
+        body = JSON.stringify({ model: FC.state.settings.model, messages });
       } else {
         url = 'https://api.anthropic.com/v1/messages';
         headers = { 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
