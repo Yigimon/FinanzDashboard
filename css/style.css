@@ -66,7 +66,7 @@ button.wide{width:100%}
 .itemcard .nm{display:block;font-size:14px;font-weight:600}
 .itemcard .sb{display:block;font-size:12px;color:var(--text2)}
 .list{display:flex;flex-direction:column;gap:8px}
-.empty{font-size:13px;color:var(--muted);margin:0;padding:14px;border:1px dashed var(--border-strong);border-radius:10px;text-align:center}
+.empty{font-size:13px;color:var(--muted);margin:0;padding:14px;border:1px dashed var(--border-strong);border-radius:10px;text-align:center;display:flex;align-items:center;justify-content:center;min-height:120px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:right;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;font-size:12px;color:var(--text2)}
 td{padding:9px 12px;text-align:right}
