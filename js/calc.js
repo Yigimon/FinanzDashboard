@@ -80,7 +80,7 @@
     const q = inc > 0 ? (1 - exp / inc) : 0; // Sparquote
     parts.push({ name:'Sparquote', val: Math.max(0, Math.min(100, q / 0.25 * 100)), weight: 30,
       info: Math.round(q * 100) + ' % (Ziel: 25 %)' });
-    const ngMonths = exp > 0 ? liquid / exp : 6;
+    const ngMonths = exp > 0 ? liquid / exp : 0;
     parts.push({ name:'Notgroschen', val: Math.max(0, Math.min(100, ngMonths / 6 * 100)), weight: 25,
       info: (Math.round(ngMonths * 10) / 10).toLocaleString('de-DE') + ' von 6 Monaten' });
     const fq = inc > 0 ? fixExpense() / inc : 1;
