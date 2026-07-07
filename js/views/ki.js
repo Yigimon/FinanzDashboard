@@ -18,6 +18,7 @@
 <select id="ki-model" style="width:auto;">
 <option value="claude-haiku-4-5-20251001">Anthropic Haiku</option>
 <option value="claude-sonnet-5">Anthropic Sonnet</option>
+<option value="gemini-3.5-flash">Google Gemini 3.5 Flash</option>
 <option value="gemini-1.0-pro">Google Gemini 1.0 Pro</option>
 <option value="gemini-1.0-ultra">Google Gemini 1.0 Ultra</option>
 </select>
@@ -38,10 +39,22 @@
 </div>`;
 
     document.getElementById('ki-key').value = FC.state.settings.apiKey || '';
+    document.getElementById('ki-provider').value = FC.state.settings.aiProvider || 'anthropic';
     document.getElementById('ki-model').value = FC.state.settings.model;
     updateStatus();
+    document.getElementById('ki-provider').addEventListener('change', e => {
+      const provider = e.target.value;
+      if (provider === 'google' && FC.state.settings.model.startsWith('claude-')) {
+        document.getElementById('ki-model').value = 'gemini-3.5-flash';
+      }
+      if (provider === 'anthropic' && FC.state.settings.model.startsWith('gemini-')) {
+        document.getElementById('ki-model').value = 'claude-haiku-4-5-20251001';
+      }
+      updateStatus();
+    });
     document.getElementById('ki-keysave').addEventListener('click', () => {
       FC.state.settings.apiKey = document.getElementById('ki-key').value.trim();
+      FC.state.settings.aiProvider = document.getElementById('ki-provider').value;
       FC.state.settings.model = document.getElementById('ki-model').value;
       FC.persist();
       updateStatus(true);
@@ -123,14 +136,21 @@
       let url, headers, body;
 
       if (provider === 'google') {
-        url = 'https://generativelanguage.googleapis.com/v1beta2/models/' + encodeURIComponent(FC.state.settings.model) + ':generateText';
-        headers = { 'content-type':'application/json', 'Authorization':'Bearer ' + FC.state.settings.apiKey };
-        body = JSON.stringify({
-          prompt: {
-            text: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() +
-              ' Antworte knapp, konkret und mit Zahlen aus den Daten. Nur Fließtext und einfache Aufzählungen, kein Markdown. Benutzerfrage: ' + q
-          }
-        });
+        url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(FC.state.settings.model) + ':generateContent';
+        const apiKey = FC.state.settings.apiKey;
+        headers = { 'content-type':'application/json', 'x-goog-api-key': apiKey };
+        if (apiKey.startsWith('Bearer ') || apiKey.startsWith('ya29.')) {
+          headers.Authorization = apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey;
+        }
+        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() + '\nAntworten sollen knapp, konkret und mit Zahlen aus den Daten sein. Nur Fließtext und einfache Aufzählungen, kein Markdown.';
+        const contents = [
+          { role: 'user', parts: [{ text: systemText }] },
+          ...history.map(entry => ({
+            role: entry.role === 'assistant' ? 'model' : entry.role,
+            parts: [{ text: entry.content }]
+          }))
+        ];
+        body = JSON.stringify({ contents });
       } else {
         url = 'https://api.anthropic.com/v1/messages';
         headers = { 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
@@ -147,7 +167,9 @@
         throw new Error('HTTP ' + res.status + ' — ' + t.slice(0, 300));
       }
       const j = await res.json();
-      const txt = j.candidates?.[0]?.output || (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n') || j.output || '(leere Antwort)';
+      const txt = j.candidates?.[0]?.content?.parts?.[0]?.text ||
+        (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n') ||
+        j.output || '(leere Antwort)';
       history.push({ role:'assistant', content:txt });
       wait.textContent = txt;
     } catch (err) {

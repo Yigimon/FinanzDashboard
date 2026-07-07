@@ -173,6 +173,7 @@ ${fsSupport ? '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button id="dat
     document.getElementById('dat-reset').addEventListener('click', async () => {
       if (confirm('Wirklich alle Daten löschen? Das kann nicht rückgängig gemacht werden.')) {
         ['items','cats','positions','goals','history','years','settings'].forEach(k => localStorage.removeItem('fc:' + k));
+        localStorage.setItem('fc:empty', JSON.stringify(true));
         await clearBackupHandle();
         location.reload();
       }

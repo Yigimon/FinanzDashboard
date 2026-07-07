@@ -77,12 +77,14 @@ window.FC = (function () {
     try { localStorage.setItem('fc:' + key, JSON.stringify(val)); } catch (e) {}
   }
 
+  const useEmptyStartup = load('empty', false);
+
   const state = {
-    items: load('items', seedItems()),
-    cats: load('cats', DEFAULT_CATS),
-    positions: load('positions', seedPositions()),
-    goals: load('goals', seedGoals()),
-    history: load('history', seedHistory()),
+    items: load('items', useEmptyStartup ? [] : seedItems()),
+    cats: load('cats', useEmptyStartup ? [] : DEFAULT_CATS),
+    positions: load('positions', []),
+    goals: load('goals', []),
+    history: load('history', []),
     years: load('years', []),
     settings: Object.assign({apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid:6500, budgets:{}, theme:'auto'}, load('settings', {}))
   };
@@ -97,6 +99,7 @@ window.FC = (function () {
   });
 
   function persist(){
+    localStorage.removeItem('fc:empty');
     save('items', state.items);
     save('cats', state.cats);
     save('positions', state.positions);
