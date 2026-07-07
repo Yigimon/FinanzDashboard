@@ -247,8 +247,14 @@
       }
       const j = await res.json();
       const txt = j.candidates?.[0]?.content?.parts?.[0]?.text ||
+        j.choices?.[0]?.message?.content ||
+        j.choices?.[0]?.text ||
+        j.output_text ||
+        j.text ||
         (j.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n') ||
-        j.output || '(leere Antwort)';
+        j.output ||
+        (typeof j === 'string' ? j : '') ||
+        '(leere Antwort)';
       history.push({ role:'assistant', content:txt });
       wait.textContent = txt;
     } catch (err) {
