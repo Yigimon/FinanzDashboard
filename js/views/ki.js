@@ -14,16 +14,26 @@
 <select id="ki-provider" style="width:auto;">
 <option value="anthropic">Anthropic</option>
 <option value="google">Google AI Studio</option>
-<option value="grok">Groq</option>
+<option value="groq">Groq</option>
 </select>
 <select id="ki-model" style="width:auto;">
-<option value="claude-haiku-4-5-20251001">Anthropic Haiku</option>
-<option value="claude-sonnet-5">Anthropic Sonnet</option>
-<option value="gemini-3.5-flash">Google Gemini 3.5 Flash</option>
-<option value="gemini-1.0-pro">Google Gemini 1.0 Pro</option>
-<option value="gemini-1.0-ultra">Google Gemini 1.0 Ultra</option>
-<option value="llama-3.3-70b-versatile">Groq Llama 3.3 70B Versatile</option>
-<option value="openai/gpt-oss-20b">Groq GPT-OSS 20B</option>
+<optgroup label="Anthropic">
+<option value="claude-haiku-4-5-20251001">Haiku 4.5 — schnell</option>
+<option value="claude-sonnet-5">Sonnet 5 — gründlich</option>
+</optgroup>
+<optgroup label="Google AI Studio">
+<option value="gemini-2.0-flash">Gemini 2.0 Flash — schnell ⚡</option>
+<option value="gemini-2.5-flash-preview-05-20">Gemini 2.5 Flash — sehr schnell ⚡⚡</option>
+<option value="gemini-2.5-pro-preview-06-05">Gemini 2.5 Pro — gründlich</option>
+<option value="gemini-1.5-flash">Gemini 1.5 Flash — stabil</option>
+<option value="gemini-1.5-pro">Gemini 1.5 Pro — stabil gründlich</option>
+</optgroup>
+<optgroup label="Groq (OpenAI-kompatibel)">
+<option value="llama-3.3-70b-versatile">Llama 3.3 70B — kostenlos schnell</option>
+<option value="llama-3.1-8b-instant">Llama 3.1 8B Instant — sehr schnell ⚡⚡</option>
+<option value="mixtral-8x7b-32768">Mixtral 8x7B — gut für Deutsch</option>
+<option value="gemma2-9b-it">Gemma2 9B — Google/Groq</option>
+</optgroup>
 </select>
 <button id="ki-keysave">Speichern</button>
 </div>
@@ -38,22 +48,20 @@
 
     document.getElementById('ki-key').value = FC.state.settings.apiKey || '';
     document.getElementById('ki-provider').value = FC.state.settings.aiProvider || 'anthropic';
-    document.getElementById('ki-model').value = FC.state.settings.model;
+    // Gespeichertes Modell prüfen — existiert es noch in der Auswahl?
+    const modelSel = document.getElementById('ki-model');
+    const validModels = [...modelSel.options].map(o => o.value);
+    const savedModel = FC.state.settings.model;
+    const provider = FC.state.settings.aiProvider || 'anthropic';
+    const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.0-flash', groq:'llama-3.3-70b-versatile' };
+    modelSel.value = validModels.includes(savedModel) ? savedModel : (defaults[provider] || validModels[0]);
     updateStatus();
     document.getElementById('ki-provider').addEventListener('change', e => {
       const provider = e.target.value;
-      if (provider === 'google' && FC.state.settings.model.startsWith('claude-')) {
-        document.getElementById('ki-model').value = 'gemini-3.5-flash';
-      }
-      if (provider === 'anthropic' && FC.state.settings.model.startsWith('gemini-')) {
-        document.getElementById('ki-model').value = 'claude-haiku-4-5-20251001';
-      }
-      if (provider === 'grok' && (FC.state.settings.model.startsWith('claude-') || FC.state.settings.model.startsWith('gemini-'))) {
-        document.getElementById('ki-model').value = 'llama-3.3-70b-versatile';
-      }
-      if ((provider === 'google' || provider === 'anthropic') && FC.state.settings.model.startsWith('openai/')) {
-        document.getElementById('ki-model').value = provider === 'google' ? 'gemini-3.5-flash' : 'claude-haiku-4-5-20251001';
-      }
+      const cur = document.getElementById('ki-model').value;
+      const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.0-flash', groq:'llama-3.3-70b-versatile' };
+      const belongs = { anthropic: cur.startsWith('claude-'), google: cur.startsWith('gemini-'), groq: cur.startsWith('llama-') || cur.startsWith('mixtral-') || cur.startsWith('gemma') };
+      if (!belongs[provider]) document.getElementById('ki-model').value = defaults[provider];
       updateStatus();
     });
     document.getElementById('ki-keysave').addEventListener('click', () => {
@@ -159,20 +167,53 @@
     });
   }
 
+  // Kompakter Kontext: ~80% weniger Tokens als volles JSON
   function fdata(){
-    const r2 = v => Math.round(v * 100) / 100;
-    return JSON.stringify({
-      stand: mkey(months[0]),
-      posten: FC.state.items.map(i => ({ name:i.name, betrag:i.amount, typ:i.type === 'in' ? 'Einnahme' : 'Ausgabe',
-        kategorie:i.cat, intervall:IVL[i.interval],
-        referenzmonat: (typeof i.interval === 'number' && i.interval > 1) ? MN[i.ref] : undefined,
-        zahlungsmonat: i.once || undefined, start: i.start || undefined, ende: i.end || undefined })),
-      depot: FC.state.positions.map(p => ({ name:p.name, art:p.kind, wert:p.value, sparrate:p.rate, rendite_pa:p.ret })),
-      ziele: FC.state.goals.map(g => ({ name:g.name, ziel:g.target, gespart:g.saved, rate:g.rate })),
-      verfuegbares_guthaben: FC.state.settings.liquid,
-      monatsuebersicht: months.map(mo => { const t = totals(mo);
-        return { monat: MN[mo.m] + ' ' + mo.y, einnahmen:r2(t.inc), ausgaben:r2(t.exp), saldo:r2(t.saldo) }; })
-    });
+    const r0 = v => Math.round(v);
+    const { totals, avgSaldo, avgExp, avgInc, byCategory } = FC.calc;
+    const t0 = totals(months[0]);
+    const inc0 = r0(t0.inc), exp0 = r0(t0.exp), sal0 = r0(t0.saldo);
+    const avgSal = r0(avgSaldo()), avgE = r0(avgExp()), avgI = r0(avgInc());
+    const sq = inc0 > 0 ? Math.round((1 - exp0 / inc0) * 100) : 0;
+    const depot = r0(FC.state.positions.reduce((a, p) => a + p.value, 0));
+    const sparrate = r0(FC.state.positions.reduce((a, p) => a + p.rate, 0));
+    const liquid = r0(Number(FC.state.settings.liquid) || 0);
+
+    // Ausgaben nach Kategorie (aktueller Monat)
+    const byCat = byCategory([months[0]], 'out');
+    const topCats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 6)
+      .map(([n, v]) => n + ' ' + r0(v) + '€').join(', ');
+
+    // Einmalige Posten kurz
+    const einmalig = FC.state.items.filter(i => i.interval === 0)
+      .map(i => i.name + ' ' + r0(i.amount) + '€').join(', ');
+
+    // Wiederkehrende Posten
+    const fixItems = FC.state.items.filter(i => i.interval !== 0)
+      .map(i => (i.type === 'in' ? '+' : '-') + i.name + ' ' + r0(FC.calc.effAmount(i)) + '€/' +
+        (i.interval === 1 ? 'M' : i.interval === 'w' ? 'W' : i.interval + 'M')).join(', ');
+
+    // Depot
+    const depotStr = FC.state.positions.map(p => p.name + ' ' + r0(p.value) + '€ (' + p.rate + '€/M, ' + p.ret + '% p.a.)').join('; ');
+
+    // Ziele
+    const zieleStr = FC.state.goals.map(g => g.name + ': ' + r0(g.saved) + '/' + r0(g.target) + '€').join('; ');
+
+    // Verlauf letzte 3 Snapshots
+    const snapStr = FC.state.history.slice(-3).map(s => s.month + ': +' + s.inc + '€/-' + s.exp + '€').join(', ');
+
+    return [
+      'Stand: ' + mkey(months[0]),
+      'Monat: Einnahmen ' + inc0 + '€, Ausgaben ' + exp0 + '€, Saldo ' + sal0 + '€, Sparquote ' + sq + '%',
+      'Ø/Monat: Einnahmen ' + avgI + '€, Ausgaben ' + avgE + '€, Saldo ' + avgSal + '€',
+      'Top-Ausgaben: ' + (topCats || '–'),
+      'Posten: ' + (fixItems || '–'),
+      einmalig ? 'Einmalig: ' + einmalig : '',
+      'Depot: ' + (depotStr || '–') + ' | Gesamt: ' + depot + '€, Sparrate: ' + sparrate + '€/M',
+      'Guthaben: ' + liquid + '€',
+      zieleStr ? 'Ziele: ' + zieleStr : '',
+      snapStr ? 'Verlauf: ' + snapStr : ''
+    ].filter(Boolean).join('\n');
   }
 
   function msg(role, text){
@@ -211,7 +252,7 @@
         if (apiKey.startsWith('Bearer ') || apiKey.startsWith('ya29.')) {
           headers.Authorization = apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey;
         }
-        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() + '\nAntworten sollen knapp, konkret und mit Zahlen aus den Daten sein. Nur Fließtext und einfache Aufzählungen, kein Markdown.';
+        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.';
         const contents = [
           { role: 'user', parts: [{ text: systemText }] },
           ...history.map(entry => ({
@@ -220,11 +261,11 @@
           }))
         ];
         body = JSON.stringify({ contents });
-      } else if (provider === 'grok') {
+      } else if (provider === 'groq') {
         url = 'https://api.groq.com/openai/v1/chat/completions';
         const apiKey = FC.state.settings.apiKey;
         headers = { 'content-type':'application/json', 'Authorization': apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey };
-        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() + '\nAntworten sollen knapp, konkret und mit Zahlen aus den Daten sein. Nur Fließtext und einfache Aufzählungen, kein Markdown.';
+        const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.';
         const messages = [
           { role: 'system', content: systemText },
           ...history.map(entry => ({ role: entry.role, content: entry.content }))
@@ -235,15 +276,25 @@
         headers = { 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
           'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' };
         body = JSON.stringify({ model: FC.state.settings.model, max_tokens: 1500,
-          system: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Hier die aktuellen Finanzdaten des Nutzers als JSON: ' + fdata() +
-            ' Antworte knapp, konkret und mit Zahlen aus den Daten. Nur Fließtext und einfache Aufzählungen, kein Markdown.',
+          system: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.',
           messages: history.slice(-10) });
       }
 
-      const res = await fetch(url, { method:'POST', headers, body });
+      let res = await fetch(url, { method:'POST', headers, body });
+      // Bei 503 (Überlast) einmal automatisch auf Gemini 1.5 Flash zurückfallen
+      if (res.status === 503 && provider === 'google') {
+        const fallback = 'gemini-1.5-flash';
+        const fallbackUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + fallback + ':generateContent';
+        res = await fetch(fallbackUrl, { method:'POST', headers, body });
+      }
       if (!res.ok) {
         const t = await res.text();
-        throw new Error('HTTP ' + res.status + ' — ' + t.slice(0, 300));
+        let hint = '';
+        try { const j = JSON.parse(t); hint = j.error?.message || ''; } catch {}
+        if (res.status === 503) throw new Error('Modell derzeit überlastet (503). Versuche es in einem Moment erneut oder wähle ein anderes Modell (z. B. Gemini 1.5 Flash). ' + (hint ? '(' + hint.slice(0, 120) + ')' : ''));
+        if (res.status === 401 || res.status === 403) throw new Error('API-Schlüssel ungültig oder kein Zugriff (HTTP ' + res.status + '). Prüfe deinen Schlüssel im API-Tab.');
+        if (res.status === 429) throw new Error('Rate-Limit erreicht (429). Kurz warten und erneut versuchen.');
+        throw new Error('HTTP ' + res.status + (hint ? ' — ' + hint.slice(0, 200) : ' — ' + t.slice(0, 200)));
       }
       const j = await res.json();
       const txt = j.candidates?.[0]?.content?.parts?.[0]?.text ||
