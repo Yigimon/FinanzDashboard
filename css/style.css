@@ -24,7 +24,8 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5}
 main{max-width:920px;margin:0 auto;padding:0 14px 40px}
 .apphead{max-width:920px;margin:0 auto;padding:18px 14px 10px;display:flex;align-items:center;gap:12px}
-.applogo{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.applogo{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+.applogo-img{width:100%;height:100%;object-fit:cover;display:block}
 .apptitle{display:block;font-size:19px;font-weight:600}
 .appsub{display:block;font-size:12px;color:var(--text2)}
 .appfoot{max-width:920px;margin:0 auto;padding:10px 14px 30px;font-size:12px;color:var(--muted)}
