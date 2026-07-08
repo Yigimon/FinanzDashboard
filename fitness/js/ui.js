@@ -1,0 +1,79 @@
+// UI-Hilfsfunktionen und Chart-Theme
+(function (FT) {
+  const kg = v => new Intl.NumberFormat('de-DE', {maximumFractionDigits:1}).format(v) + ' kg';
+  const num1 = v => new Intl.NumberFormat('de-DE', {maximumFractionDigits:1}).format(v);
+  const $ = sel => document.querySelector(sel);
+
+  if (window.Chart) {
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    Chart.defaults.animation.duration = reduced ? 0 : 350;
+    Chart.defaults.animation.easing = 'easeOutQuart';
+    Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+  }
+
+  let toastWrap = null;
+  function toast(message, opts){
+    opts = opts || {};
+    if (!toastWrap) {
+      toastWrap = document.createElement('div');
+      toastWrap.className = 'toastwrap';
+      toastWrap.setAttribute('aria-live', 'polite');
+      document.body.appendChild(toastWrap);
+    }
+    const el = document.createElement('div');
+    el.className = 'toast';
+    const txt = document.createElement('span');
+    txt.textContent = message;
+    el.appendChild(txt);
+    let timer;
+    const close = () => { clearTimeout(timer); el.style.animation = 'toast-out .18s ease-in forwards'; setTimeout(() => el.remove(), 180); };
+    if (opts.label && opts.onAction) {
+      const btn = document.createElement('button');
+      btn.className = 'toast-action';
+      btn.type = 'button';
+      btn.textContent = opts.label;
+      btn.addEventListener('click', () => { opts.onAction(); close(); });
+      el.appendChild(btn);
+    }
+    const x = document.createElement('button');
+    x.className = 'toast-close';
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Schließen');
+    x.innerHTML = '<i class="ti ti-x" aria-hidden="true"></i>';
+    x.addEventListener('click', close);
+    el.appendChild(x);
+    toastWrap.appendChild(el);
+    timer = setTimeout(close, opts.duration || 6000);
+    return close;
+  }
+
+  function isDark(){
+    const t = document.documentElement.dataset.theme;
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function ax(){
+    const dark = isDark();
+    return { muted:'#8a919e', grid: dark ? '#262a33' : '#e5e7eb', surface: dark ? '#181b21' : '#ffffff' };
+  }
+
+  const charts = {};
+  function chart(id, cfg){
+    if (charts[id]) charts[id].destroy();
+    const el = document.getElementById(id);
+    if (!el) return null;
+    charts[id] = new Chart(el, cfg);
+    return charts[id];
+  }
+
+  function tile(label, value, cls, sub){
+    return `<div class="tile"><p class="tl">${label}</p><p class="tv num ${cls || ''}">${value}</p>${sub ? `<p class="ts">${sub}</p>` : ''}</div>`;
+  }
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  }
+
+  FT.ui = { kg, num1, $, ax, isDark, chart, tile, esc, toast };
+})(window.FT);
