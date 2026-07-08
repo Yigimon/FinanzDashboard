@@ -31,8 +31,63 @@
     }
     closeNav();
     FC.views[name].render();
+    enhanceInfo(document.getElementById('tab-' + name));
     window.scrollTo({ top: 0 });
   };
+
+  // ---- Info-Popover: verschiebt Abschnitts-Erklärungen hinter ein anklickbares (i)-Symbol ----
+  let popEl = null, popBtn = null;
+  function ensurePop(){
+    if (popEl) return popEl;
+    popEl = document.createElement('div');
+    popEl.className = 'infopop';
+    popEl.hidden = true;
+    document.body.appendChild(popEl);
+    document.addEventListener('click', e => {
+      if (popEl.hidden) return;
+      if (popBtn && popBtn.contains(e.target)) return;
+      if (!popEl.contains(e.target)) hidePop();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hidePop(); });
+    window.addEventListener('scroll', hidePop, true);
+    window.addEventListener('resize', hidePop);
+    return popEl;
+  }
+  function hidePop(){ if (popEl) popEl.hidden = true; if (popBtn) { popBtn.setAttribute('aria-expanded', 'false'); popBtn = null; } }
+  function showPop(btn, html){
+    const pop = ensurePop();
+    if (popBtn === btn) { hidePop(); return; }
+    if (popBtn) popBtn.setAttribute('aria-expanded', 'false');
+    pop.innerHTML = html;
+    pop.hidden = false;
+    popBtn = btn; btn.setAttribute('aria-expanded', 'true');
+    const r = btn.getBoundingClientRect();
+    let left = r.right - pop.offsetWidth; if (left < 8) left = 8;
+    let top = r.bottom + 6;
+    if (top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 6);
+    pop.style.left = left + 'px'; pop.style.top = top + 'px';
+  }
+  function enhanceInfo(root){
+    if (!root) return;
+    root.querySelectorAll('.sechead').forEach(head => {
+      if (head.dataset.infoDone) return;
+      const next = head.nextElementSibling;
+      if (!next || !next.classList.contains('subtext')) return;
+      head.dataset.infoDone = '1';
+      head.classList.add('has-info');
+      const html = next.innerHTML;
+      next.remove();
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'infobtn';
+      btn.setAttribute('aria-label', 'Erklärung anzeigen');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = '<i class="ti ti-info-circle" aria-hidden="true"></i>';
+      btn.addEventListener('click', e => { e.stopPropagation(); showPop(btn, html); });
+      head.appendChild(btn);
+    });
+  }
+  FC.enhanceInfo = enhanceInfo;
 
   // Mobile: Seitenleiste ein-/ausblenden
   const sidebar = document.querySelector('.sidebar');
@@ -57,6 +112,7 @@
     FC.autoSnapshot();
     FC.persist();
     FC.views[active].render();
+    enhanceInfo(document.getElementById('tab-' + active));
     if (FC.backupWrite) FC.backupWrite();
   };
 
