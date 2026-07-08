@@ -92,6 +92,11 @@ window.FC = (function () {
     settings: Object.assign({}, defaultSettings, load('settings', {}))
   };
 
+  // Migration: alter Provider-Wert 'grok' → 'groq'. Ältere Stände speicherten den
+  // Groq-Provider als 'grok'; die aktuelle Fetch-Logik prüft nur 'groq' und würde den
+  // Groq-Schlüssel sonst an den Anthropic-Endpunkt senden → HTTP 401 (Schlüssel ungültig).
+  if (state.settings.aiProvider === 'grok') state.settings.aiProvider = 'groq';
+
   // Migration: Einmalzahlungen älterer Stände bekommen volles Datum + Händler-Feld
   state.items.forEach(it => {
     if (it.interval === 0) {

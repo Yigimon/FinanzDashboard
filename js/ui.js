@@ -5,10 +5,14 @@
   const pct = v => new Intl.NumberFormat('de-DE', {maximumFractionDigits:1}).format(v) + ' %';
   const $ = sel => document.querySelector(sel);
 
-  // Chart.js global an das Design anpassen + Animation bei „reduzierter Bewegung" abschalten
+  // Chart.js global an das Design anpassen + Animation bei „reduzierter Bewegung" abschalten.
+  // WICHTIG: nur Dauer/Easing am vorhandenen Default-Objekt anpassen, nicht das ganze
+  // animation-Objekt ersetzen — ein Ersetzen kappt die Opacity-Einblendung der Tooltips,
+  // wodurch beim Hovern über Diagramme gar kein Tooltip mehr sichtbar wird.
   if (window.Chart) {
     const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    Chart.defaults.animation = reduced ? false : { duration: 350, easing: 'easeOutQuart' };
+    Chart.defaults.animation.duration = reduced ? 0 : 350;
+    Chart.defaults.animation.easing = 'easeOutQuart';
     Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
   }
 

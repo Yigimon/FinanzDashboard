@@ -89,7 +89,7 @@
     const st = document.getElementById('ki-status');
     if (FC.state.settings.apiKey) {
       if (FC.state.settings.aiProvider === 'google') {
-        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else if (FC.state.settings.aiProvider === 'grok') {
+        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else if (FC.state.settings.aiProvider === 'groq') {
         st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Groq. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else {
         st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an die Claude-API (Modell: ' +
           (FC.state.settings.model.includes('haiku') ? 'Haiku' : 'Sonnet') + '). Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
@@ -244,16 +244,19 @@
     const wait = msg('ai', 'Denke nach…');
     history.push({ role:'user', content:q });
     try {
-      const provider = FC.state.settings.aiProvider || 'anthropic';
+      // 'grok' als Alias von 'groq' zulassen (alte gespeicherte Stände), sonst Fehlrouting → 401
+      const provider = (FC.state.settings.aiProvider === 'grok' ? 'groq' : FC.state.settings.aiProvider) || 'anthropic';
       let url, headers, body;
 
       if (provider === 'google') {
         url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(FC.state.settings.model) + ':generateContent';
-        const apiKey = FC.state.settings.apiKey;
+        // Google AI Studio authentifiziert per API-Key im Header x-goog-api-key, NICHT per OAuth.
+        // Ein zusätzlicher Authorization: Bearer-Header lässt Google den Key als OAuth-Token
+        // deuten und mit HTTP 401 ("Expected OAuth 2 access token") ablehnen — auch wenn der
+        // Key gültig ist. Darum ein evtl. mitkopiertes "Bearer "-Präfix entfernen und
+        // ausschließlich x-goog-api-key senden.
+        const apiKey = FC.state.settings.apiKey.replace(/^Bearer\s+/i, '').trim();
         headers = { 'content-type':'application/json', 'x-goog-api-key': apiKey };
-        if (apiKey.startsWith('Bearer ') || apiKey.startsWith('ya29.')) {
-          headers.Authorization = apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey;
-        }
         const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.';
         const contents = [
           { role: 'user', parts: [{ text: systemText }] },
@@ -294,7 +297,7 @@
         let hint = '';
         try { const j = JSON.parse(t); hint = j.error?.message || ''; } catch {}
         if (res.status === 503) throw new Error('Modell derzeit überlastet (503). Versuche es in einem Moment erneut oder wähle ein anderes Modell (z. B. Gemini 1.5 Flash). ' + (hint ? '(' + hint.slice(0, 120) + ')' : ''));
-        if (res.status === 401 || res.status === 403) throw new Error('API-Schlüssel ungültig oder kein Zugriff (HTTP ' + res.status + '). Prüfe deinen Schlüssel im API-Tab.');
+        if (res.status === 401 || res.status === 403) throw new Error('API-Schlüssel ungültig oder kein Zugriff (HTTP ' + res.status + '). Prüfe deinen Schlüssel im API-Tab.' + (hint ? ' Details: ' + hint.slice(0, 200) : ''));
         if (res.status === 429) throw new Error('Rate-Limit erreicht (429). Kurz warten und erneut versuchen.');
         throw new Error('HTTP ' + res.status + (hint ? ' — ' + hint.slice(0, 200) : ' — ' + t.slice(0, 200)));
       }
