@@ -47,8 +47,8 @@
 <div class="card"><div class="chartbox sm"><canvas id="chart-trend" role="img" aria-label="Monatliche Beträge der gewählten Kategorie"></canvas></div></div>
 <p class="sechead">Wiederkehrend vs. einmalig (Ausgaben)</p>
 <div class="legendrow">
-<span><span class="sw" style="background:#4a3aa7;"></span>Wiederkehrend</span>
-<span><span class="sw" style="background:#e87ba4;"></span>Einmalig</span>
+<span><span class="sw" style="background:#4a4e8f;"></span>Wiederkehrend</span>
+<span><span class="sw" style="background:#c1698f;"></span>Einmalig</span>
 </div>
 <div class="card"><div class="chartbox sm"><canvas id="chart-fix" role="img" aria-label="Wiederkehrende und einmalige Ausgaben pro Monat"></canvas></div></div>`;
 
@@ -115,7 +115,7 @@
     const usable = H - padT * 2 - gap * (nodeCount - 1);
     const scale = usable / total;
     const lx0 = 150, lw = 16, hubX0 = 430, hubW = 40, rx0 = 734, rw = 16;
-    const incCol = '#0f9d6e', hubCol = A.muted, surCol = '#0f9d6e';
+    const incCol = '#1f7a5c', hubCol = A.muted, surCol = '#1f7a5c';
     const money = v => new Intl.NumberFormat('de-DE', {maximumFractionDigits:0}).format(v) + ' €';
 
     function stack(list){
@@ -310,7 +310,7 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const devs = data.map(d => Math.round((d.exp - aExp) * 100) / 100);
     chart('chart-dev', { type:'bar',
       data:{ labels:months.map(mo => MS[mo.m]),
-        datasets:[{ data:devs, backgroundColor:devs.map(v => v > 0 ? '#F43F5E' : '#10B981'), borderRadius:4, maxBarThickness:20 }] },
+        datasets:[{ data:devs, backgroundColor:devs.map(v => v > 0 ? '#b23b3b' : '#1f7a5c'), borderRadius:4, maxBarThickness:20 }] },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => (c.parsed.y > 0 ? '+' : '') + eur(c.parsed.y) + ' ggü. Ø'}} },
         scales:{ x:{ticks:{color:A.muted, autoSkip:false}, grid:{display:false}, border:{color:A.grid}},
@@ -330,8 +330,8 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const tavg = tvals.reduce((a, b) => a + b, 0) / 12;
     chart('chart-trend', {
       data:{ labels:months.map(mo => MS[mo.m]), datasets:[
-        {type:'bar', label:trendCat, data:tvals, backgroundColor:'#2a78d6', borderRadius:4, maxBarThickness:20},
-        {type:'line', label:'Ø', data:Array(12).fill(Math.round(tavg * 100) / 100), borderColor:'#888780', borderDash:[5,4], borderWidth:2, pointRadius:0}
+        {type:'bar', label:trendCat, data:tvals, backgroundColor:'#c1552f', borderRadius:4, maxBarThickness:20},
+        {type:'line', label:'Ø', data:Array(12).fill(Math.round(tavg * 100) / 100), borderColor:'#8b8a7c', borderDash:[5,4], borderWidth:2, pointRadius:0}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur(c.parsed.y)}} },
@@ -343,8 +343,8 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const varV = months.map(mo => { let s = 0; monthEntries(mo).forEach(e => { if (e.type === 'out' && e.interval === 0) s += effAmount(e); }); return Math.round(s * 100) / 100; });
     chart('chart-fix', { type:'bar',
       data:{ labels:months.map(mo => MS[mo.m]), datasets:[
-        {label:'Wiederkehrend', data:fixV, backgroundColor:'#4a3aa7', borderRadius:4, maxBarThickness:20},
-        {label:'Einmalig', data:varV, backgroundColor:'#e87ba4', borderRadius:4, maxBarThickness:20}
+        {label:'Wiederkehrend', data:fixV, backgroundColor:'#4a4e8f', borderRadius:4, maxBarThickness:20},
+        {label:'Einmalig', data:varV, backgroundColor:'#c1698f', borderRadius:4, maxBarThickness:20}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur(c.parsed.y)}} },

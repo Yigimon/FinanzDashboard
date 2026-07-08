@@ -17,8 +17,8 @@
 <div class="grid-tiles" id="v-tiles"></div>
 <div class="card" style="margin-bottom:14px;">
 <div class="legendrow">
-<span><span class="swl" style="background:#2a78d6;"></span>Vermögen (Depot + Guthaben)</span>
-<span><span class="swl" style="background:#0f9d6e;"></span>Monatssaldo</span>
+<span><span class="swl" style="background:#c1552f;"></span>Vermögen (Depot + Guthaben)</span>
+<span><span class="swl" style="background:#1f7a5c;"></span>Monatssaldo</span>
 </div>
 <div class="chartbox"><canvas id="chart-verlauf" role="img" aria-label="Verlauf von Vermögen und Monatssaldo über die gespeicherten Snapshots"></canvas></div>
 </div>
@@ -121,8 +121,8 @@ ${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i cl
     Object.keys(seen).sort().forEach(k => uniq.push(seen[k]));
     chart('chart-verlauf', { data:{ labels: uniq.map(p => mLabel(p.month)),
       datasets:[
-        {type:'line', label:'Vermögen', data:uniq.map(p => Math.round(p.depot + p.liquid)), borderColor:'#2a78d6', backgroundColor:'#2a78d61a', fill:true, borderWidth:2, pointRadius:3, tension:.25, yAxisID:'y'},
-        {type:'line', label:'Saldo', data:uniq.map(p => Math.round(p.saldo)), borderColor:'#0f9d6e', borderWidth:2, pointRadius:3, borderDash:[5,4], tension:.25, yAxisID:'y'}
+        {type:'line', label:'Vermögen', data:uniq.map(p => Math.round(p.depot + p.liquid)), borderColor:'#c1552f', backgroundColor:'#c1552f1a', fill:true, borderWidth:2, pointRadius:3, tension:.25, yAxisID:'y'},
+        {type:'line', label:'Saldo', data:uniq.map(p => Math.round(p.saldo)), borderColor:'#1f7a5c', borderWidth:2, pointRadius:3, borderDash:[5,4], tension:.25, yAxisID:'y'}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur0(c.parsed.y)}} },
@@ -160,9 +160,9 @@ ${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i cl
     const yrs = FC.state.years.slice().sort((a, b) => a.year.localeCompare(b.year));
     if (yrs.length) {
       chart('chart-years', { data:{ labels: yrs.map(y => y.year), datasets:[
-        {type:'bar', label:'Einnahmen', data:yrs.map(y => Math.round(y.inc)), backgroundColor:'#10B981', borderRadius:4, maxBarThickness:34},
-        {type:'bar', label:'Ausgaben', data:yrs.map(y => Math.round(y.exp)), backgroundColor:'#F43F5E', borderRadius:4, maxBarThickness:34},
-        {type:'line', label:'Saldo', data:yrs.map(y => Math.round(y.saldo)), borderColor:'#eda100', borderWidth:2, pointRadius:4, tension:.2}
+        {type:'bar', label:'Einnahmen', data:yrs.map(y => Math.round(y.inc)), backgroundColor:'#1f7a5c', borderRadius:4, maxBarThickness:34},
+        {type:'bar', label:'Ausgaben', data:yrs.map(y => Math.round(y.exp)), backgroundColor:'#b23b3b', borderRadius:4, maxBarThickness:34},
+        {type:'line', label:'Saldo', data:yrs.map(y => Math.round(y.saldo)), borderColor:'#c99a3f', borderWidth:2, pointRadius:4, tension:.2}
       ]},
         options:{ responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur0(c.parsed.y)}} },

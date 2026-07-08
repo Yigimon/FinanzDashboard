@@ -15,10 +15,10 @@
 </div>
 <div class="card" style="margin-bottom:14px;">
 <div class="legendrow">
-<span><span class="swl" style="background:#2a78d6;"></span>realistisch</span>
-<span><span class="swl" style="background:#1baf7a;"></span>optimistisch (+3 %)</span>
-<span><span class="swl" style="background:#e34948;"></span>pessimistisch (−3 %)</span>
-<span><span class="swl" style="background:#888780;"></span>Einzahlungen</span>
+<span><span class="swl" style="background:#c1552f;"></span>realistisch</span>
+<span><span class="swl" style="background:#1f7a5c;"></span>optimistisch (+3 %)</span>
+<span><span class="swl" style="background:#b23b3b;"></span>pessimistisch (−3 %)</span>
+<span><span class="swl" style="background:#8b8a7c;"></span>Einzahlungen</span>
 </div>
 <div class="chartbox"><canvas id="chart-depot" role="img" aria-label="Depotprognose in drei Szenarien gegenüber den Einzahlungen"></canvas></div>
 </div>
@@ -141,10 +141,10 @@
 
     chart('chart-depot', { type:'line',
       data:{ labels: real.vv.map((_, i) => curY + i), datasets: [
-        {label:'realistisch', data:real.vv.map(x => Math.round(x)), borderColor:'#2a78d6', backgroundColor:'#2a78d61a', fill:true, borderWidth:2, pointRadius:0, tension:.25},
-        {label:'optimistisch', data:opt.vv.map(x => Math.round(x)), borderColor:'#1baf7a', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.25},
-        {label:'pessimistisch', data:pess.vv.map(x => Math.round(x)), borderColor:'#e34948', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.25},
-        {label:'Einzahlungen', data:real.pp.map(x => Math.round(x)), borderColor:'#888780', borderDash:[2,3], borderWidth:2, pointRadius:0, fill:false}
+        {label:'realistisch', data:real.vv.map(x => Math.round(x)), borderColor:'#c1552f', backgroundColor:'#c1552f1a', fill:true, borderWidth:2, pointRadius:0, tension:.25},
+        {label:'optimistisch', data:opt.vv.map(x => Math.round(x)), borderColor:'#1f7a5c', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.25},
+        {label:'pessimistisch', data:pess.vv.map(x => Math.round(x)), borderColor:'#b23b3b', borderWidth:2, borderDash:[6,4], pointRadius:0, fill:false, tension:.25},
+        {label:'Einzahlungen', data:real.pp.map(x => Math.round(x)), borderColor:'#8b8a7c', borderDash:[2,3], borderWidth:2, pointRadius:0, fill:false}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur0(c.parsed.y)}} },
