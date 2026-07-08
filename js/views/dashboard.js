@@ -22,7 +22,7 @@
   <div class="legendrow">
     <span><span class="sw" style="background:var(--pos);"></span>Einnahmen</span>
     <span><span class="sw" style="background:var(--neg);"></span>Ausgaben</span>
-    <span><span class="swl" style="background:#eda100;"></span>Saldo</span>
+    <span><span class="swl" style="background:#c99a3f;"></span>Saldo</span>
   </div>
   <div class="chartbox"><canvas id="chart-main" role="img" aria-label="Einnahmen, Ausgaben und Saldo pro Monat über 12 Monate"></canvas></div>
 </div>
@@ -79,9 +79,9 @@
     const A = ax();
     chart('chart-main', {
       data: { labels: months.map(mo => MS[mo.m]), datasets: [
-        {type:'bar', label:'Einnahmen', data:data.map(d => d.inc), backgroundColor:'#10B981', borderRadius:4, maxBarThickness:16},
-        {type:'bar', label:'Ausgaben', data:data.map(d => d.exp), backgroundColor:'#F43F5E', borderRadius:4, maxBarThickness:16},
-        {type:'line', label:'Saldo', data:data.map(d => d.saldo), borderColor:'#eda100', backgroundColor:'#eda100', borderWidth:2, pointRadius:3, tension:.3}
+        {type:'bar', label:'Einnahmen', data:data.map(d => d.inc), backgroundColor:'#1f7a5c', borderRadius:4, maxBarThickness:16},
+        {type:'bar', label:'Ausgaben', data:data.map(d => d.exp), backgroundColor:'#b23b3b', borderRadius:4, maxBarThickness:16},
+        {type:'line', label:'Saldo', data:data.map(d => d.saldo), borderColor:'#c99a3f', backgroundColor:'#c99a3f', borderWidth:2, pointRadius:3, tension:.3}
       ]},
       options: { responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur(c.parsed.y)}} },

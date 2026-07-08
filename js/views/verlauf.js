@@ -17,8 +17,8 @@
 <div class="grid-tiles" id="v-tiles"></div>
 <div class="card" style="margin-bottom:14px;">
 <div class="legendrow">
-<span><span class="swl" style="background:#2a78d6;"></span>Vermögen (Depot + Guthaben)</span>
-<span><span class="swl" style="background:#0f9d6e;"></span>Monatssaldo</span>
+<span><span class="swl" style="background:#c1552f;"></span>Vermögen (Depot + Guthaben)</span>
+<span><span class="swl" style="background:#1f7a5c;"></span>Monatssaldo</span>
 </div>
 <div class="chartbox"><canvas id="chart-verlauf" role="img" aria-label="Verlauf von Vermögen und Monatssaldo über die gespeicherten Snapshots"></canvas></div>
 </div>
@@ -94,7 +94,7 @@ ${top.map(([n, v]) => `<div class="trendrow"><i class="ti ${catIcon(n)}" aria-hi
 <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(n)}</span>
 <span class="pbar" style="margin:0;width:90px;flex-shrink:0;"><span style="width:${Math.round(v / totCat * 100)}%;background:var(--accent);"></span></span>
 <span class="num" style="font-weight:600;min-width:80px;text-align:right;">${eur0(v)}</span></div>`).join('')}
-${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i class="ti ti-lock-check" aria-hidden="true"></i> Abgeschlossen am ${new Date(archived.closedAt).toLocaleDateString('de-DE')}.</p>` : ''}`;
+${archived ? `<p class="subtext" data-live style="margin:10px 0 0;color:var(--pos);"><i class="ti ti-lock-check" aria-hidden="true"></i> Abgeschlossen am ${new Date(archived.closedAt).toLocaleDateString('de-DE')}.</p>` : ''}`;
     btn.style.display = 'inline-block';
     btn.innerHTML = `<i class="ti ti-lock" aria-hidden="true"></i> ${archived ? 'Jahr ' + selYear + ' neu abschließen' : 'Jahr ' + selYear + ' abschließen'}`;
   }
@@ -121,8 +121,8 @@ ${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i cl
     Object.keys(seen).sort().forEach(k => uniq.push(seen[k]));
     chart('chart-verlauf', { data:{ labels: uniq.map(p => mLabel(p.month)),
       datasets:[
-        {type:'line', label:'Vermögen', data:uniq.map(p => Math.round(p.depot + p.liquid)), borderColor:'#2a78d6', backgroundColor:'#2a78d61a', fill:true, borderWidth:2, pointRadius:3, tension:.25, yAxisID:'y'},
-        {type:'line', label:'Saldo', data:uniq.map(p => Math.round(p.saldo)), borderColor:'#0f9d6e', borderWidth:2, pointRadius:3, borderDash:[5,4], tension:.25, yAxisID:'y'}
+        {type:'line', label:'Vermögen', data:uniq.map(p => Math.round(p.depot + p.liquid)), borderColor:'#c1552f', backgroundColor:'#c1552f1a', fill:true, borderWidth:2, pointRadius:3, tension:.25, yAxisID:'y'},
+        {type:'line', label:'Saldo', data:uniq.map(p => Math.round(p.saldo)), borderColor:'#1f7a5c', borderWidth:2, pointRadius:3, borderDash:[5,4], tension:.25, yAxisID:'y'}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur0(c.parsed.y)}} },
@@ -160,9 +160,9 @@ ${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i cl
     const yrs = FC.state.years.slice().sort((a, b) => a.year.localeCompare(b.year));
     if (yrs.length) {
       chart('chart-years', { data:{ labels: yrs.map(y => y.year), datasets:[
-        {type:'bar', label:'Einnahmen', data:yrs.map(y => Math.round(y.inc)), backgroundColor:'#10B981', borderRadius:4, maxBarThickness:34},
-        {type:'bar', label:'Ausgaben', data:yrs.map(y => Math.round(y.exp)), backgroundColor:'#F43F5E', borderRadius:4, maxBarThickness:34},
-        {type:'line', label:'Saldo', data:yrs.map(y => Math.round(y.saldo)), borderColor:'#eda100', borderWidth:2, pointRadius:4, tension:.2}
+        {type:'bar', label:'Einnahmen', data:yrs.map(y => Math.round(y.inc)), backgroundColor:'#1f7a5c', borderRadius:4, maxBarThickness:34},
+        {type:'bar', label:'Ausgaben', data:yrs.map(y => Math.round(y.exp)), backgroundColor:'#b23b3b', borderRadius:4, maxBarThickness:34},
+        {type:'line', label:'Saldo', data:yrs.map(y => Math.round(y.saldo)), borderColor:'#c99a3f', borderWidth:2, pointRadius:4, tension:.2}
       ]},
         options:{ responsive:true, maintainAspectRatio:false,
           plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur0(c.parsed.y)}} },

@@ -3,7 +3,7 @@ window.FC = (function () {
   const MN = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const MS = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
   const IVL = {0:'einmalig', w:'wöchentlich', 1:'monatlich', 2:'alle 2 Monate', 3:'vierteljährlich', 4:'alle 4 Monate', 6:'halbjährlich', 12:'jährlich'};
-  const PIE = ['#2a78d6','#1baf7a','#eda100','#008300','#4a3aa7','#e34948','#e87ba4','#eb6834','#888780','#0f766e','#b45309','#7f1d1d','#365314','#1e3a8a','#86198f','#78350f'];
+  const PIE = ['#c1552f','#1f7a5c','#4a4e8f','#c99a3f','#b23b3b','#5c8a8f','#8b5fa3','#7a8c3f','#c1698f','#3f6b8f','#a37b3f','#5f4a8f','#3f8f6b','#8f5f3f','#6b6b8f','#8f3f5f'];
   const ICONS = ['ti-wallet','ti-briefcase','ti-coins','ti-home','ti-bolt','ti-wifi','ti-shopping-cart','ti-bottle','ti-tools-kitchen-2','ti-shirt','ti-bus','ti-car','ti-gas-station','ti-shield','ti-credit-card','ti-device-tv','ti-confetti','ti-barbell','ti-plane','ti-heart','ti-book','ti-horse-toy','ti-paw','ti-gift','ti-sofa','ti-device-laptop','ti-pig-money','ti-receipt-tax','ti-baby-carriage','ti-armchair','ti-chart-line','ti-phone','ti-scissors','ti-music','ti-camera','ti-target-arrow','ti-dots'];
   const KINDS = [['ETF-Sparplan','ti-chart-line'],['Aktien','ti-trending-up'],['Krypto','ti-currency-bitcoin'],['Tagesgeld','ti-pig-money'],['Festgeld','ti-lock'],['Immobilien','ti-building'],['Gold & Rohstoffe','ti-diamond'],['Sonstiges','ti-coins']];
   // Kategorien, die als unvermeidbare Fixkosten gelten (für Fixkostenquote/Score)

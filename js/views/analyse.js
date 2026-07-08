@@ -47,8 +47,8 @@
 <div class="card"><div class="chartbox sm"><canvas id="chart-trend" role="img" aria-label="Monatliche Beträge der gewählten Kategorie"></canvas></div></div>
 <p class="sechead">Wiederkehrend vs. einmalig (Ausgaben)</p>
 <div class="legendrow">
-<span><span class="sw" style="background:#4a3aa7;"></span>Wiederkehrend</span>
-<span><span class="sw" style="background:#e87ba4;"></span>Einmalig</span>
+<span><span class="sw" style="background:#4a4e8f;"></span>Wiederkehrend</span>
+<span><span class="sw" style="background:#c1698f;"></span>Einmalig</span>
 </div>
 <div class="card"><div class="chartbox sm"><canvas id="chart-fix" role="img" aria-label="Wiederkehrende und einmalige Ausgaben pro Monat"></canvas></div></div>`;
 
@@ -99,61 +99,52 @@
       if (restSum > 0) big.push(['Weitere', restSum]);
       return big;
     }
-    let left = group(inc, totalInc || 1);
-    let right = group(exp, totalExp || 1);
+    const left = group(inc, totalInc || 1);
+    const right = group(exp, totalExp || 1);
     const surplus = totalInc - totalExp;
-    if (surplus >= 0.5) right.push(['Überschuss / Sparen', surplus]);
-    else if (surplus <= -0.5) left.push(['aus Rücklagen', -surplus]);
-    const leftTotal = left.reduce((a, x) => a + x[1], 0);
-    const rightTotal = right.reduce((a, x) => a + x[1], 0);
-    const total = Math.max(leftTotal, rightTotal) || 1;
 
     const A = ax();
-    const W = 900, padT = 14, gap = 6;
-    const nodeCount = Math.max(left.length, right.length);
-    const H = Math.max(300, nodeCount * 46 + 28);
-    const usable = H - padT * 2 - gap * (nodeCount - 1);
-    const scale = usable / total;
-    const lx0 = 150, lw = 16, hubX0 = 430, hubW = 40, rx0 = 734, rw = 16;
-    const incCol = '#0f9d6e', hubCol = A.muted, surCol = '#0f9d6e';
+    const css = getComputedStyle(document.documentElement);
+    const textCol = (css.getPropertyValue('--text') || '#1b2130').trim();
+    const posCol = (css.getPropertyValue('--pos') || '#1f7a5c').trim();
+    const warnCol = (css.getPropertyValue('--warn') || '#a8781f').trim();
     const money = v => new Intl.NumberFormat('de-DE', {maximumFractionDigits:0}).format(v) + ' €';
 
-    function stack(list){
-      let y = padT; const out = [];
-      list.forEach(([n, v]) => { const h = Math.max(2, v * scale); out.push({n, v, y, h}); y += h + gap; });
-      return out;
-    }
-    const L = stack(left), R = stack(right);
-    // Hub-Bänder in Reihenfolge der jeweiligen Seite
-    let hy = padT; const hubLeftBands = L.map(nd => { const b = {y:hy, h:nd.h}; hy += nd.h + gap; return b; });
-    hy = padT; const hubRightBands = R.map(nd => { const b = {y:hy, h:nd.h}; hy += nd.h + gap; return b; });
-    const hubY = padT, hubH = leftTotal * scale;
+    const HUB = 'Budget';
+    const labels = {}, colors = {}, flows = [];
+    labels[HUB] = 'Budget'; colors[HUB] = A.muted;
+    left.forEach(([n, v]) => { const k = 'in:' + n; labels[k] = n; colors[k] = posCol; flows.push({ from: k, to: HUB, flow: v }); });
+    right.forEach(([n, v], i) => { const k = 'out:' + n; labels[k] = n; colors[k] = PIE[i % PIE.length]; flows.push({ from: HUB, to: k, flow: v }); });
+    if (surplus >= 0.5) { labels['surplus'] = 'Überschuss / Sparen'; colors['surplus'] = posCol; flows.push({ from: HUB, to: 'surplus', flow: surplus }); }
+    else if (surplus <= -0.5) { labels['reserve'] = 'aus Rücklagen'; colors['reserve'] = warnCol; flows.push({ from: 'reserve', to: HUB, flow: -surplus }); }
 
-    function ribbon(x0, y0, x1, y1, h, color){
-      const cx = (x0 + x1) / 2;
-      return `<path d="M ${x0} ${y0} C ${cx} ${y0}, ${cx} ${y1}, ${x1} ${y1} L ${x1} ${y1 + h} C ${cx} ${y1 + h}, ${cx} ${y0 + h}, ${x0} ${y0 + h} Z" fill="${color}" opacity="0.32"/>`;
-    }
-    let svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Sankey-Diagramm des Geldflusses" style="max-width:100%;height:auto;min-width:640px;">`;
-    // Links Einnahmen → Hub
-    L.forEach((nd, i) => { svg += ribbon(lx0 + lw, nd.y, hubX0, hubLeftBands[i].y, nd.h, incCol); });
-    // Hub → Ausgaben
-    R.forEach((nd, i) => { const c = nd.n.startsWith('Überschuss') ? surCol : PIE[i % PIE.length]; svg += ribbon(hubX0 + hubW, hubRightBands[i].y, rx0, nd.y, nd.h, c); });
-    // Hub-Knoten
-    svg += `<rect x="${hubX0}" y="${hubY}" width="${hubW}" height="${Math.max(2, hubH)}" rx="3" fill="${hubCol}"/>`;
-    svg += `<text x="${hubX0 + hubW / 2}" y="${hubY - 3}" text-anchor="middle" font-size="12" fill="${A.muted}">Budget</text>`;
-    // Einnahmen-Knoten + Labels (links)
-    L.forEach(nd => {
-      svg += `<rect x="${lx0}" y="${nd.y}" width="${lw}" height="${nd.h}" rx="3" fill="${incCol}"/>`;
-      svg += `<text x="${lx0 - 6}" y="${nd.y + nd.h / 2 + 4}" text-anchor="end" font-size="12" fill="var(--text)">${esc(nd.n)} · ${money(nd.v)}</text>`;
+    const nodeColor = k => colors[k] || A.muted;
+    const rows = Math.max(left.length, right.length + (surplus >= 0.5 ? 1 : 0));
+    const h = Math.max(280, rows * 52 + 40);
+    host.innerHTML = `<div class="chartbox" style="height:${h}px"><canvas id="chart-sankey" role="img" aria-label="Sankey-Diagramm des Geldflusses vom Einkommen über das Budget in die Ausgaben-Kategorien"></canvas></div>`;
+
+    chart('chart-sankey', {
+      type: 'sankey',
+      data: { datasets: [{
+        data: flows,
+        labels: labels,
+        colorFrom: c => nodeColor(c.dataset.data[c.dataIndex].from),
+        colorTo: c => nodeColor(c.dataset.data[c.dataIndex].to),
+        colorMode: 'gradient',
+        alpha: 0.6,
+        borderWidth: 0,
+        nodeWidth: 12,
+        size: 'max',
+        color: textCol,
+        font: { family: 'IBM Plex Sans, system-ui, sans-serif', size: 12, weight: '500' }
+      }]},
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: 4 },
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: c => {
+            const r = c.dataset.data[c.dataIndex];
+            return (labels[r.from] || r.from) + ' → ' + (labels[r.to] || r.to) + ': ' + money(r.flow);
+          } } } } }
     });
-    // Ausgaben-Knoten + Labels (rechts)
-    R.forEach((nd, i) => {
-      const c = nd.n.startsWith('Überschuss') ? surCol : PIE[i % PIE.length];
-      svg += `<rect x="${rx0}" y="${nd.y}" width="${rw}" height="${nd.h}" rx="3" fill="${c}"/>`;
-      svg += `<text x="${rx0 + rw + 6}" y="${nd.y + nd.h / 2 + 4}" text-anchor="start" font-size="12" fill="var(--text)">${esc(nd.n)} · ${money(nd.v)}</text>`;
-    });
-    svg += '</svg>';
-    host.innerHTML = svg;
   }
 
   function renderHeat(){
@@ -196,7 +187,7 @@
     }
     document.getElementById('an-heatmap').innerHTML =
       `<div class="heatgrid">${cells.join('')}</div>
-<p class="subtext" style="margin:10px 0 0;">${hint}</p>`;
+<p class="subtext" data-live style="margin:10px 0 0;">${hint}</p>`;
   }
 
   function render(){
@@ -310,7 +301,7 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const devs = data.map(d => Math.round((d.exp - aExp) * 100) / 100);
     chart('chart-dev', { type:'bar',
       data:{ labels:months.map(mo => MS[mo.m]),
-        datasets:[{ data:devs, backgroundColor:devs.map(v => v > 0 ? '#F43F5E' : '#10B981'), borderRadius:4, maxBarThickness:20 }] },
+        datasets:[{ data:devs, backgroundColor:devs.map(v => v > 0 ? '#b23b3b' : '#1f7a5c'), borderRadius:4, maxBarThickness:20 }] },
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => (c.parsed.y > 0 ? '+' : '') + eur(c.parsed.y) + ' ggü. Ø'}} },
         scales:{ x:{ticks:{color:A.muted, autoSkip:false}, grid:{display:false}, border:{color:A.grid}},
@@ -330,8 +321,8 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const tavg = tvals.reduce((a, b) => a + b, 0) / 12;
     chart('chart-trend', {
       data:{ labels:months.map(mo => MS[mo.m]), datasets:[
-        {type:'bar', label:trendCat, data:tvals, backgroundColor:'#2a78d6', borderRadius:4, maxBarThickness:20},
-        {type:'line', label:'Ø', data:Array(12).fill(Math.round(tavg * 100) / 100), borderColor:'#888780', borderDash:[5,4], borderWidth:2, pointRadius:0}
+        {type:'bar', label:trendCat, data:tvals, backgroundColor:'#c1552f', borderRadius:4, maxBarThickness:20},
+        {type:'line', label:'Ø', data:Array(12).fill(Math.round(tavg * 100) / 100), borderColor:'#8b8a7c', borderDash:[5,4], borderWidth:2, pointRadius:0}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur(c.parsed.y)}} },
@@ -343,8 +334,8 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     const varV = months.map(mo => { let s = 0; monthEntries(mo).forEach(e => { if (e.type === 'out' && e.interval === 0) s += effAmount(e); }); return Math.round(s * 100) / 100; });
     chart('chart-fix', { type:'bar',
       data:{ labels:months.map(mo => MS[mo.m]), datasets:[
-        {label:'Wiederkehrend', data:fixV, backgroundColor:'#4a3aa7', borderRadius:4, maxBarThickness:20},
-        {label:'Einmalig', data:varV, backgroundColor:'#e87ba4', borderRadius:4, maxBarThickness:20}
+        {label:'Wiederkehrend', data:fixV, backgroundColor:'#4a4e8f', borderRadius:4, maxBarThickness:20},
+        {label:'Einmalig', data:varV, backgroundColor:'#c1698f', borderRadius:4, maxBarThickness:20}
       ]},
       options:{ responsive:true, maintainAspectRatio:false,
         plugins:{ legend:{display:false}, tooltip:{callbacks:{label:c => c.dataset.label + ': ' + eur(c.parsed.y)}} },
