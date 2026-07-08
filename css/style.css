@@ -256,3 +256,26 @@ input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   .sankeybox{min-width:560px}
   #an-sankey{-webkit-overflow-scrolling:touch}
 }
+
+/* ---------- Toast / Rückgängig ---------- */
+.toastwrap{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:200;
+  display:flex;flex-direction:column;gap:8px;align-items:center;max-width:calc(100vw - 24px)}
+.toast{display:flex;align-items:center;gap:12px;background:var(--text);color:var(--bg);
+  padding:11px 12px 11px 15px;border-radius:var(--radius-sm);box-shadow:var(--shadow-2);font-size:13.5px;
+  animation:toast-in .2s ease-out}
+.toast .toast-action{background:transparent;border:none;color:var(--accent);font-weight:700;cursor:pointer;
+  padding:4px 6px;min-height:0;font-size:13.5px}
+.toast .toast-close{background:transparent;border:none;color:var(--bg);opacity:.55;cursor:pointer;
+  padding:2px;min-height:0;display:inline-flex;line-height:1}
+.toast .toast-close:hover{opacity:1}
+.toast .toast-close i{font-size:16px}
+@keyframes toast-in{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toast-out{to{transform:translateY(8px);opacity:0}}
+@media (prefers-reduced-motion: reduce){ .toast{animation:none} }
+
+/* ---------- Konten / Kategorie-Verwaltung ---------- */
+.acctrow{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.acctrow:last-child{border-bottom:none}
+.acctrow .ic{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--text2);font-size:17px}
+.catmanrow{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.catmanrow:last-child{border-bottom:none}

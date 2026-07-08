@@ -22,6 +22,7 @@
 <div class="card" style="margin-bottom:4px;">
 <label class="lbl" style="max-width:280px;">Verfügbares Guthaben (Konto + Tagesgeld)
 <input id="an-liquid" type="number" min="0" step="100"></label>
+<p id="an-liqnote" class="subtext" data-live style="margin:6px 0 0;"></p>
 <div class="grid-tiles" style="margin:12px 0 0;" id="an-liqtiles"></div>
 </div>
 <p class="sechead">Geldfluss (Sankey)</p>
@@ -231,8 +232,14 @@
     document.getElementById('an-piewrap').classList.toggle('empty-data', !total);
 
     // Liquidität / Notgroschen
-    const liquid = Number(FC.state.settings.liquid) || 0;
-    document.getElementById('an-liquid').value = liquid;
+    const hasAccts = (FC.state.accounts || []).length > 0;
+    const liquid = FC.calc.liquidTotal();
+    const liqInput = document.getElementById('an-liquid');
+    liqInput.value = liquid;
+    liqInput.disabled = hasAccts;
+    document.getElementById('an-liqnote').textContent = hasAccts
+      ? 'Ergibt sich aus deinen ' + FC.state.accounts.length + ' Konten (Tab Depot → Konten & Guthaben).'
+      : 'Tipp: Lege im Tab Depot einzelne Konten an, dann wird die Summe automatisch übernommen.';
     const reichweite = aExp > 0 ? liquid / aExp : 0;
     const ngPct = aExp > 0 ? Math.min(100, Math.round(reichweite / 6 * 100)) : 0;
     document.getElementById('an-liqtiles').innerHTML =

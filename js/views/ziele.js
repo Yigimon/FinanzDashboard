@@ -35,7 +35,16 @@
       const eb = e.target.closest('[data-gedit]');
       if (eb) { openForm(FC.state.goals.find(g => g.id === Number(eb.dataset.gedit))); return; }
       const db = e.target.closest('[data-gdel]');
-      if (db) { FC.state.goals = FC.state.goals.filter(g => g.id !== Number(db.dataset.gdel)); FC.changed(); }
+      if (db) {
+        const id = Number(db.dataset.gdel), idx = FC.state.goals.findIndex(g => g.id === id);
+        if (idx < 0) return;
+        const removed = FC.state.goals[idx];
+        FC.state.goals.splice(idx, 1);
+        FC.changed();
+        FC.ui.toast('Ziel „' + removed.name + '" gelöscht', { label: 'Rückgängig', onAction: () => {
+          FC.state.goals.splice(Math.min(idx, FC.state.goals.length), 0, removed); FC.changed();
+        } });
+      }
     });
   }
 

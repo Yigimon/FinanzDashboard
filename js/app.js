@@ -36,6 +36,8 @@
     FC.views[name].render();
     enhanceInfo(document.getElementById('tab-' + name));
     window.scrollTo({ top: 0 });
+    const main = document.getElementById('main');
+    if (main) main.focus({ preventScroll: true });
   };
 
   // ---- Info-Popover: verschiebt Abschnitts-Erklärungen hinter ein anklickbares (i)-Symbol ----

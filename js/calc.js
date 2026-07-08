@@ -12,6 +12,13 @@
   // Wöchentliche Posten werden mit 52/12 auf den Monat umgerechnet
   function effAmount(it){ return it.interval === 'w' ? it.amount * 52 / 12 : it.amount; }
 
+  // Verfügbares Guthaben: Summe der Konten (falls angelegt), sonst das einzelne Guthaben-Feld
+  function liquidTotal(){
+    const accs = FC.state.accounts || [];
+    if (accs.length) return accs.reduce((a, x) => a + (Number(x.balance) || 0), 0);
+    return Number(FC.state.settings.liquid) || 0;
+  }
+
   function activeIn(it, mo){
     if (it.interval === 0) return it.once === mkey(mo);
     const k = ymNum(mo), s = parseYM(it.start), e = parseYM(it.end);
@@ -75,7 +82,7 @@
   // Finanzscore 0–100 mit Teilwerten
   function score(){
     const inc = avgInc(), exp = avgExp(), saldo = avgSaldo();
-    const liquid = Number(FC.state.settings.liquid) || 0;
+    const liquid = liquidTotal();
     const parts = [];
     const q = inc > 0 ? (1 - exp / inc) : 0; // Sparquote
     parts.push({ name:'Sparquote', val: Math.max(0, Math.min(100, q / 0.25 * 100)), weight: 30,
@@ -137,7 +144,7 @@
 
   // Gesamtvermögen = Depotwert + verfügbares Guthaben (Liquidität)
   function netWorth(){
-    return FC.state.positions.reduce((a, p) => a + p.value, 0) + (Number(FC.state.settings.liquid) || 0);
+    return FC.state.positions.reduce((a, p) => a + p.value, 0) + liquidTotal();
   }
   // Snapshot des aktuellen Live-Monats (für den Verlauf)
   function snapshotNow(){
@@ -145,7 +152,7 @@
     const t = totals(mo);
     return { month: mkey(mo), inc: Math.round(t.inc), exp: Math.round(t.exp), saldo: Math.round(t.saldo),
       depot: Math.round(FC.state.positions.reduce((a, p) => a + p.value, 0)),
-      liquid: Math.round(Number(FC.state.settings.liquid) || 0),
+      liquid: Math.round(liquidTotal()),
       byCat: (function(){ const b = byCategory([mo], 'out'); const r = {}; Object.keys(b).forEach(k => r[k] = Math.round(b[k])); return r; })() };
   }
 
@@ -176,5 +183,5 @@
 
   FC.calc = { parseYM, ymNum, effAmount, activeIn, monthEntries, totals, avgSaldo, avgExp, avgInc,
     byCategory, project, projectAll, fixExpense, score, fire, transactions, byMerchant, dailyExpense,
-    netWorth, snapshotNow, yearsInHistory, yearAggregate };
+    netWorth, liquidTotal, snapshotNow, yearsInHistory, yearAggregate };
 })(window.FC);
