@@ -1,8 +1,9 @@
-// Posten: Einnahmen/Ausgaben verwalten, eigene Kategorien mit Icon
+// Posten: Einnahmen/Ausgaben verwalten, eigene Kategorien mit Icon, Suche/Filter, Änderung ab Monat
 (function (FC) {
-  const { eur, catIcon, esc, monthLabel } = FC.ui;
+  const { eur, catIcon, esc, monthLabel, toast } = FC.ui;
   const { months, MN, MS, IVL, mkey, curM } = FC;
   let editId = null, ncIcon = 'ti-dots';
+  let search = '', filterCat = '', sortBy = 'name';
 
   function init(el){
     el.innerHTML = `
@@ -20,6 +21,7 @@
 <label class="lbl" id="f-ref-wrap" style="display:none;">Referenzmonat<select id="f-ref"></select></label>
 <label class="lbl" id="f-start-wrap">Start (optional)<input id="f-start" type="month"></label>
 <label class="lbl" id="f-end-wrap">Ende (optional)<input id="f-end" type="month"></label>
+<label class="lbl" id="f-scope-wrap" style="display:none;">Änderung gilt<select id="f-scope"><option value="all">für alle Monate</option><option value="future">erst ab ${MN[curM]} (Verlauf bleibt)</option></select></label>
 </div>
 <div id="newcat-panel" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
 <div class="formgrid">
@@ -31,6 +33,11 @@
 <button id="btn-save" class="primary" style="flex:1;">Speichern</button>
 <button id="btn-cancel" style="flex:1;">Abbrechen</button>
 </div>
+</div>
+<div class="pill-row">
+<input id="p-search" placeholder="Suchen (Name, Kategorie, Händler)…" aria-label="Posten durchsuchen" style="flex:1;min-width:150px;">
+<select id="p-filtercat" style="width:auto;" aria-label="Nach Kategorie filtern"></select>
+<select id="p-sort" style="width:auto;" aria-label="Sortierung"><option value="name">Name A–Z</option><option value="amount">Betrag (hoch → niedrig)</option><option value="cat">Kategorie</option></select>
 </div>
 <p class="sechead">Einnahmen</p>
 <div id="list-in" class="list" style="margin-bottom:18px;"></div>
@@ -52,17 +59,38 @@
     document.getElementById('btn-new').addEventListener('click', () => openForm(null));
     document.getElementById('btn-cancel').addEventListener('click', () => { document.getElementById('form-panel').style.display = 'none'; editId = null; });
     document.getElementById('btn-save').addEventListener('click', saveItem);
+    document.getElementById('p-search').addEventListener('input', e => { search = e.target.value.trim(); render(); });
+    document.getElementById('p-filtercat').addEventListener('change', e => { filterCat = e.target.value; render(); });
+    document.getElementById('p-sort').addEventListener('change', e => { sortBy = e.target.value; render(); });
     el.addEventListener('click', e => {
       const eb = e.target.closest('[data-edit]');
       if (eb) { openForm(FC.state.items.find(i => i.id === Number(eb.dataset.edit))); return; }
       const db = e.target.closest('[data-del]');
-      if (db) { FC.state.items = FC.state.items.filter(i => i.id !== Number(db.dataset.del)); FC.changed(); }
+      if (db) delItem(Number(db.dataset.del));
     });
+  }
+
+  function delItem(id){
+    const idx = FC.state.items.findIndex(i => i.id === id);
+    if (idx < 0) return;
+    const removed = FC.state.items[idx];
+    FC.state.items.splice(idx, 1);
+    FC.changed();
+    toast('„' + removed.name + '" gelöscht', { label: 'Rückgängig', onAction: () => {
+      FC.state.items.splice(Math.min(idx, FC.state.items.length), 0, removed);
+      FC.changed();
+    } });
   }
 
   function fillCats(){
     document.getElementById('f-cat').innerHTML =
       FC.sortedCats().map(c => `<option>${esc(c.n)}</option>`).join('') + '<option value="__new">+ Neue Kategorie…</option>';
+  }
+  function fillFilterCats(){
+    const sel = document.getElementById('p-filtercat');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Alle Kategorien</option>' + FC.sortedCatNames().map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    if ([...sel.options].some(o => o.value === cur)) sel.value = cur; else filterCat = '';
   }
   function renderIcons(){
     document.getElementById('nc-icons').innerHTML = FC.ICONS.map(ic =>
@@ -75,6 +103,8 @@
     document.getElementById('f-ref-wrap').style.display = (v !== '0' && v !== 'w' && Number(v) > 1) ? 'flex' : 'none';
     document.getElementById('f-start-wrap').style.display = v === '0' ? 'none' : 'flex';
     document.getElementById('f-end-wrap').style.display = v === '0' ? 'none' : 'flex';
+    // „Änderung gilt" nur beim Bearbeiten eines wiederkehrenden Postens anbieten
+    document.getElementById('f-scope-wrap').style.display = (editId && v !== '0') ? 'flex' : 'none';
   }
 
   function openForm(it){
@@ -97,6 +127,7 @@
     document.getElementById('f-merchant').value = it && it.merchant ? it.merchant : '';
     document.getElementById('f-start').value = it && it.start ? it.start : '';
     document.getElementById('f-end').value = it && it.end ? it.end : '';
+    document.getElementById('f-scope').value = 'all';
     syncFields();
     document.getElementById('newcat-panel').style.display = 'none';
     document.getElementById('form-panel').style.display = 'block';
@@ -118,15 +149,32 @@
     const raw = document.getElementById('f-interval').value;
     const iv = raw === 'w' ? 'w' : Number(raw);
     const date = document.getElementById('f-once').value || (mkey(months[0]) + '-01');
-    const obj = { id: editId || FC.nextId(FC.state.items), name, amount, type, cat, interval: iv,
+    const fields = { name, amount, type, cat, interval: iv,
       ref: (typeof iv === 'number' && iv > 1) ? Number(document.getElementById('f-ref').value) : 0,
       once: iv === 0 ? date.slice(0, 7) : null,
       date: iv === 0 ? date : null,
       merchant: iv === 0 ? document.getElementById('f-merchant').value.trim() : '',
       start: iv === 0 ? null : (document.getElementById('f-start').value || null),
       end: iv === 0 ? null : (document.getElementById('f-end').value || null) };
-    if (editId) FC.state.items = FC.state.items.map(i => i.id === editId ? obj : i);
-    else FC.state.items.push(obj);
+
+    const scope = document.getElementById('f-scope').value;
+    const curKey = mkey(months[0]);
+    const old = editId ? FC.state.items.find(i => i.id === editId) : null;
+    // „Ab diesem Monat": altes Segment im Vormonat beenden, neues ab aktuellem Monat anlegen
+    const canSplit = old && iv !== 0 && scope === 'future' &&
+      !(old.start && FC.calc.parseYM(old.start) >= FC.calc.parseYM(curKey));
+
+    if (canSplit) {
+      const pd = new Date(months[0].y, months[0].m - 1, 1);
+      const prevKey = pd.getFullYear() + '-' + String(pd.getMonth() + 1).padStart(2, '0');
+      old.end = prevKey;
+      FC.state.items.push(Object.assign({ id: FC.nextId(FC.state.items) }, fields, { start: curKey }));
+      toast('Änderung ab ' + MN[curM] + ' übernommen — der vorherige Verlauf bleibt erhalten.', { duration: 7000 });
+    } else if (editId) {
+      FC.state.items = FC.state.items.map(i => i.id === editId ? Object.assign({ id: editId }, fields) : i);
+    } else {
+      FC.state.items.push(Object.assign({ id: FC.nextId(FC.state.items) }, fields));
+    }
     document.getElementById('form-panel').style.display = 'none';
     editId = null;
     FC.changed();
@@ -150,11 +198,31 @@
 <button class="iconbtn" data-del="${e.id}" aria-label="Löschen"><i class="ti ti-trash" style="font-size:17px"></i></button></div>`;
   }
 
+  function filteredList(t){
+    let list = FC.state.items.filter(i => i.type === t);
+    if (filterCat) list = list.filter(i => i.cat === filterCat);
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(i => (i.name || '').toLowerCase().includes(q) ||
+        (i.cat || '').toLowerCase().includes(q) || (i.merchant || '').toLowerCase().includes(q));
+    }
+    return list.slice().sort((a, b) => {
+      if (sortBy === 'amount') return FC.calc.effAmount(b) - FC.calc.effAmount(a);
+      if (sortBy === 'cat') return a.cat.localeCompare(b.cat, 'de') || a.name.localeCompare(b.name, 'de');
+      return a.name.localeCompare(b.name, 'de');
+    });
+  }
+
   function render(){
+    fillFilterCats();
+    const active = search || filterCat;
     ['in', 'out'].forEach(t => {
-      const list = FC.state.items.filter(i => i.type === t).slice().sort((a, b) => (a.interval === 0) - (b.interval === 0));
+      const list = filteredList(t);
+      const emptyMsg = active
+        ? 'Keine Treffer für die aktuelle Suche/Filter'
+        : `Noch keine ${t === 'in' ? 'Einnahmen' : 'Ausgaben'} angelegt`;
       document.getElementById('list-' + t).innerHTML = list.length ? list.map(itemRow).join('') :
-        `<p class="empty">Noch keine ${t === 'in' ? 'Einnahmen' : 'Ausgaben'} angelegt</p>`;
+        `<p class="empty">${emptyMsg}</p>`;
     });
   }
 

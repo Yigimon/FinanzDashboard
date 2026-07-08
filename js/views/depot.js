@@ -3,7 +3,9 @@
   const { eur, eur0, tile, chart, ax, kindIcon, esc } = FC.ui;
   const { KINDS, PIE, curY } = FC;
   const { project, projectAll, avgExp } = FC.calc;
-  let editId = null;
+  let editId = null, acctEdit = null;
+  const ACCT_KINDS = [['Girokonto','ti-building-bank'],['Tagesgeld','ti-pig-money'],['Bargeld','ti-cash'],['Sparkonto','ti-coins'],['Sonstiges','ti-wallet']];
+  const acctIcon = k => (ACCT_KINDS.find(x => x[0] === k) || ACCT_KINDS[4])[1];
 
   function init(el){
     el.innerHTML = `
@@ -20,13 +22,31 @@
 <span><span class="swl" style="background:#b23b3b;"></span>pessimistisch (−3 %)</span>
 <span><span class="swl" style="background:#8b8a7c;"></span>Einzahlungen</span>
 </div>
-<div class="chartbox"><canvas id="chart-depot" role="img" aria-label="Depotprognose in drei Szenarien gegenüber den Einzahlungen"></canvas></div>
+<div class="chartbox" id="d-prognose-box"><canvas id="chart-depot" role="img" aria-label="Depotprognose in drei Szenarien gegenüber den Einzahlungen"></canvas></div>
+<p class="empty" id="d-prognose-empty" style="display:none;">Noch keine Positionen — lege unten einen Sparplan an, um die Prognose zu sehen.</p>
 </div>
 <p class="sechead">Asset Allocation</p>
 <div class="card"><div class="piewrap" id="d-allocwrap">
 <div class="chartbox sm"><canvas id="chart-alloc" role="img" aria-label="Kuchendiagramm der Portfolioaufteilung nach Anlageklasse"></canvas></div>
 <div id="d-alloclegend" style="display:flex;flex-direction:column;gap:6px;"></div>
 </div></div>
+<p class="sechead">Konten &amp; Guthaben</p>
+<p class="subtext">Lege deine Geldkonten an (Girokonto, Tagesgeld, Bargeld …). Die Summe zählt als verfügbares Guthaben für Notgroschen, Score und Gesamtvermögen.</p>
+<div class="card" style="margin-bottom:14px;">
+<div id="acct-list"></div>
+<div id="acct-form" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+<div class="formgrid">
+<label class="lbl">Name<input id="acct-name" placeholder="z. B. Girokonto"></label>
+<label class="lbl">Art<select id="acct-kind"></select></label>
+<label class="lbl">Guthaben (€)<input id="acct-balance" type="number" step="10" placeholder="0"></label>
+</div>
+<div style="display:flex;gap:8px;margin-top:12px;">
+<button id="acct-save" class="primary" style="flex:1;">Speichern</button>
+<button id="acct-cancel" style="flex:1;">Abbrechen</button>
+</div>
+</div>
+<button id="acct-add" class="wide" style="margin-top:12px;"><i class="ti ti-plus" aria-hidden="true"></i> Konto hinzufügen</button>
+</div>
 <p class="sechead">Positionen und Sparpläne</p>
 <button id="dp-new" class="wide" style="margin-bottom:14px;"><i class="ti ti-plus" aria-hidden="true"></i> Neue Position / Sparplan</button>
 <div id="dp-form" class="card" style="display:none;border-color:var(--accent);margin-bottom:14px;">
@@ -62,12 +82,75 @@
     document.getElementById('dp-cancel').addEventListener('click', () => { document.getElementById('dp-form').style.display = 'none'; editId = null; });
     document.getElementById('dp-save').addEventListener('click', save);
     document.getElementById('d-sync').addEventListener('click', sync);
+    document.getElementById('acct-add').addEventListener('click', () => openAcct(null));
+    document.getElementById('acct-cancel').addEventListener('click', () => { document.getElementById('acct-form').style.display = 'none'; acctEdit = null; });
+    document.getElementById('acct-save').addEventListener('click', saveAcct);
     el.addEventListener('click', e => {
       const eb = e.target.closest('[data-dpedit]');
       if (eb) { openForm(FC.state.positions.find(p => p.id === Number(eb.dataset.dpedit))); return; }
       const db = e.target.closest('[data-dpdel]');
-      if (db) { FC.state.positions = FC.state.positions.filter(p => p.id !== Number(db.dataset.dpdel)); FC.changed(); }
+      if (db) { delPosition(Number(db.dataset.dpdel)); return; }
+      const ae = e.target.closest('[data-aedit]');
+      if (ae) { openAcct(FC.state.accounts.find(a => a.id === Number(ae.dataset.aedit))); return; }
+      const ad = e.target.closest('[data-adel]');
+      if (ad) delAccount(Number(ad.dataset.adel));
     });
+  }
+
+  function delPosition(id){
+    const idx = FC.state.positions.findIndex(p => p.id === id);
+    if (idx < 0) return;
+    const removed = FC.state.positions[idx];
+    FC.state.positions.splice(idx, 1);
+    FC.changed();
+    FC.ui.toast('„' + removed.name + '" gelöscht', { label: 'Rückgängig', onAction: () => {
+      FC.state.positions.splice(Math.min(idx, FC.state.positions.length), 0, removed); FC.changed();
+    } });
+  }
+
+  function openAcct(a){
+    acctEdit = a ? a.id : null;
+    document.getElementById('acct-kind').innerHTML = ACCT_KINDS.map(k => `<option>${k[0]}</option>`).join('');
+    document.getElementById('acct-name').value = a ? a.name : '';
+    document.getElementById('acct-kind').value = a ? a.kind : ACCT_KINDS[0][0];
+    document.getElementById('acct-balance').value = a ? a.balance : '';
+    document.getElementById('acct-form').style.display = 'block';
+    document.getElementById('acct-name').focus();
+  }
+  function saveAcct(){
+    const name = document.getElementById('acct-name').value.trim();
+    if (!name) return;
+    const obj = { id: acctEdit || FC.nextId(FC.state.accounts), name,
+      kind: document.getElementById('acct-kind').value,
+      balance: parseFloat(document.getElementById('acct-balance').value) || 0 };
+    if (acctEdit) FC.state.accounts = FC.state.accounts.map(a => a.id === acctEdit ? obj : a);
+    else FC.state.accounts.push(obj);
+    document.getElementById('acct-form').style.display = 'none';
+    acctEdit = null;
+    FC.changed();
+  }
+  function delAccount(id){
+    const idx = FC.state.accounts.findIndex(a => a.id === id);
+    if (idx < 0) return;
+    const removed = FC.state.accounts[idx];
+    FC.state.accounts.splice(idx, 1);
+    FC.changed();
+    FC.ui.toast('Konto „' + removed.name + '" gelöscht', { label: 'Rückgängig', onAction: () => {
+      FC.state.accounts.splice(Math.min(idx, FC.state.accounts.length), 0, removed); FC.changed();
+    } });
+  }
+  function renderAccounts(){
+    const accs = FC.state.accounts || [];
+    const total = accs.reduce((a, x) => a + (Number(x.balance) || 0), 0);
+    document.getElementById('acct-list').innerHTML = accs.length
+      ? accs.map(a => `<div class="acctrow">
+<span class="ic"><i class="ti ${acctIcon(a.kind)}" aria-hidden="true"></i></span>
+<span style="min-width:0;"><span style="display:block;font-weight:600;font-size:13.5px;">${esc(a.name)}</span><span style="display:block;font-size:11.5px;color:var(--text2);">${esc(a.kind)}</span></span>
+<span class="num" style="font-weight:600;">${eur0(a.balance)}</span>
+<button class="iconbtn" data-aedit="${a.id}" aria-label="Bearbeiten"><i class="ti ti-edit" style="font-size:16px"></i></button>
+<button class="iconbtn" data-adel="${a.id}" aria-label="Löschen"><i class="ti ti-trash" style="font-size:16px"></i></button></div>`).join('')
+        + `<div class="acctrow" style="border-top:2px solid var(--border-strong);border-bottom:none;font-weight:700;"><span></span><span>Verfügbares Guthaben gesamt</span><span class="num">${eur0(total)}</span><span></span><span></span></div>`
+      : '<p class="empty">Noch keine Konten — füge dein erstes Konto hinzu, um dein Guthaben zu erfassen.</p>';
   }
 
   function openForm(p){
@@ -134,10 +217,19 @@
     const cur = FC.state.positions.reduce((a, p) => a + p.value, 0);
     const rate = FC.state.positions.reduce((a, p) => a + p.rate, 0);
     const gain = real.vv[years] - real.pp[years];
+    const liquid = FC.calc.liquidTotal();
     document.getElementById('d-tiles').innerHTML =
       tile('Wert heute', eur0(cur)) + tile('Sparrate / Monat', eur0(rate)) +
       tile('Wert nach ' + years + ' J.', eur0(real.vv[years]), '', 'realistisches Szenario') +
-      tile('davon Kursgewinn', eur0(gain), gain >= 0 ? 'pos' : 'neg');
+      tile('davon Kursgewinn', eur0(gain), gain >= 0 ? 'pos' : 'neg') +
+      tile('Guthaben (Konten)', eur0(liquid), '', (FC.state.accounts || []).length + ' Konten') +
+      tile('Gesamtvermögen', eur0(cur + liquid), '', 'Depot + Guthaben');
+
+    // Prognose-Empty-State, wenn keine Positionen
+    const hasPos = FC.state.positions.length > 0;
+    document.getElementById('d-prognose-box').style.display = hasPos ? '' : 'none';
+    document.getElementById('d-prognose-empty').style.display = hasPos ? 'none' : 'flex';
+    renderAccounts();
 
     chart('chart-depot', { type:'line',
       data:{ labels: real.vv.map((_, i) => curY + i), datasets: [

@@ -85,6 +85,7 @@ window.FC = (function () {
     // Kategorien fallen immer auf die Standardliste zurück — nie leer, sonst lassen sich keine Posten anlegen
     cats: load('cats', DEFAULT_CATS),
     positions: load('positions', []),
+    accounts: load('accounts', []),
     goals: load('goals', []),
     history: load('history', []),
     years: load('years', []),
@@ -105,6 +106,7 @@ window.FC = (function () {
     save('items', state.items);
     save('cats', state.cats);
     save('positions', state.positions);
+    save('accounts', state.accounts);
     save('goals', state.goals);
     save('history', state.history);
     save('years', state.years);
