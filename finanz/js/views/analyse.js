@@ -56,6 +56,7 @@
     document.getElementById('an-scope').innerHTML = '<option value="12">Alle 12 Monate</option>' +
       months.map((mo, i) => `<option value="${i}">${MN[mo.m]} ${mo.y}</option>`).join('');
     document.getElementById('an-heatmonth').innerHTML = months.map((mo, i) => `<option value="${FC.mkey(mo)}">${MN[mo.m]} ${mo.y}</option>`).join('');
+    FC.ui.select('an-scope');
     heatMonth = FC.mkey(months[0]);
     document.getElementById('an-scope').addEventListener('change', e => { anScope = e.target.value; render(); });
     document.getElementById('an-heatmonth').addEventListener('change', e => { heatMonth = e.target.value; renderHeat(); });
@@ -178,6 +179,7 @@
       const k = FC.mkey(mo);
       return `<option value="${k}"${k === key ? ' selected' : ''}>${MN[mo.m]} ${mo.y}${dataKeys.has(k) ? ' •' : ''}</option>`;
     }).join('');
+    FC.ui.select('an-heatmonth');
     let hint;
     if (sum > 0) {
       hint = `Je dunkler der Tag, desto mehr wurde ausgegeben. Summe datierter Ausgaben in diesem Monat: <b class="num">${eur(sum)}</b>.`;
@@ -320,6 +322,7 @@ ${pareto.map(([n, v]) => `<div style="display:flex;align-items:center;gap:8px;fo
     if (!trendCat || !allCats.includes(trendCat))
       trendCat = allCats.find(n => used.has(n) && FC.state.items.some(i => i.cat === n && i.type === 'out')) || allCats.find(n => used.has(n)) || allCats[0] || '';
     document.getElementById('an-trendcat').innerHTML = allCats.map(n => `<option${n === trendCat ? ' selected' : ''}>${esc(n)}</option>`).join('');
+    FC.ui.select('an-trendcat');
     const tvals = months.map(mo => {
       let s = 0;
       monthEntries(mo).forEach(e => { if (e.cat === trendCat) s += effAmount(e); });

@@ -72,6 +72,7 @@
     const sel = document.getElementById('v-year');
     if (!selYear || !years.includes(selYear)) selYear = years[0] || '';
     sel.innerHTML = years.map(y => `<option${y === selYear ? ' selected' : ''}>${y}</option>`).join('');
+    FC.ui.select('v-year');
     const agg = selYear ? FC.calc.yearAggregate(selYear) : null;
     const tEl = document.getElementById('v-year-tiles');
     const dEl = document.getElementById('v-year-detail');

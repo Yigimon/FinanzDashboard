@@ -92,10 +92,11 @@
     const sel = document.getElementById('w-profile');
     document.getElementById('w-empty').style.display = profiles.length ? 'none' : 'block';
     document.getElementById('w-body').style.display = profiles.length ? 'block' : 'none';
-    if (!profiles.length) { sel.innerHTML = ''; return; }
+    if (!profiles.length) { sel.innerHTML = ''; FT.ui.select('w-profile'); return; }
     const p = activeProfile();
     if (p && p.id !== FT.state.settings.activeProfileId) { FT.state.settings.activeProfileId = p.id; FT.persist(); }
     sel.innerHTML = profiles.map(pr => `<option value="${pr.id}"${pr.id === p.id ? ' selected' : ''}>${esc(pr.name)}</option>`).join('');
+    FT.ui.select('w-profile');
 
     const entries = FT.calc.entriesFor(p.id).slice().reverse();
     document.getElementById('w-list').innerHTML = entries.length ? entries.map(w => `

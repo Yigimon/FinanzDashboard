@@ -73,6 +73,24 @@
     return charts[id];
   }
 
+  // Themefähiges Dropdown statt nativem <select> (Browser-Standard-Dropdown/-Scrollbar).
+  // Gleiches Zerstören-vor-Neuaufbau-Muster wie chart(): Optionen werden zuerst normal
+  // auf dem <select> gesetzt, danach select() aufrufen, um Tom Select (neu) zu binden.
+  const selects = {};
+  function select(id, opts){
+    if (selects[id]) { selects[id].destroy(); delete selects[id]; }
+    const el = document.getElementById(id);
+    if (!el || typeof TomSelect === 'undefined') return null;
+    selects[id] = new TomSelect(el, Object.assign({ maxOptions:null }, opts));
+    return selects[id];
+  }
+  // Variante für mehrere gleichartige <select>-Elemente ohne feste ID (z. B. pro Zeile
+  // einer Liste erzeugt). Bindet Tom Select an jedes gefundene Element neu.
+  function selectAll(root, sel, opts){
+    if (typeof TomSelect === 'undefined') return;
+    root.querySelectorAll(sel).forEach(el => new TomSelect(el, Object.assign({ maxOptions:null }, opts)));
+  }
+
   function catIcon(cat){
     const f = FC.state.cats.find(c => c.n === cat);
     return f ? f.i : 'ti-dots';
@@ -101,5 +119,5 @@
     return FC.MS[m - 1] + ' ' + y;
   }
 
-  FC.ui = { eur, eur0, pct, $, ax, isDark, chart, catIcon, kindIcon, tile, tipCard, esc, monthLabel, toast };
+  FC.ui = { eur, eur0, pct, $, ax, isDark, chart, select, selectAll, catIcon, kindIcon, tile, tipCard, esc, monthLabel, toast };
 })(window.FC);

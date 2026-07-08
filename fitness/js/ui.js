@@ -67,6 +67,18 @@
     return charts[id];
   }
 
+  // Themefähiges Dropdown statt nativem <select> (Browser-Standard-Dropdown/-Scrollbar).
+  // Gleiches Zerstören-vor-Neuaufbau-Muster wie chart(): Optionen werden zuerst normal
+  // auf dem <select> gesetzt, danach select() aufrufen, um Tom Select (neu) zu binden.
+  const selects = {};
+  function select(id, opts){
+    if (selects[id]) { selects[id].destroy(); delete selects[id]; }
+    const el = document.getElementById(id);
+    if (!el || typeof TomSelect === 'undefined') return null;
+    selects[id] = new TomSelect(el, Object.assign({ maxOptions:null }, opts));
+    return selects[id];
+  }
+
   function tile(label, value, cls, sub){
     return `<div class="tile"><p class="tl">${label}</p><p class="tv num ${cls || ''}">${value}</p>${sub ? `<p class="ts">${sub}</p>` : ''}</div>`;
   }
@@ -75,5 +87,5 @@
     return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
 
-  FT.ui = { kg, num1, $, ax, isDark, chart, tile, esc, toast };
+  FT.ui = { kg, num1, $, ax, isDark, chart, select, tile, esc, toast };
 })(window.FT);

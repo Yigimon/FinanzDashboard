@@ -2,7 +2,7 @@
 (function (FT) {
   const { esc } = FT.ui;
   const { ICONS, ACTIVITY } = FT;
-  let editId = null, pIcon = 'ti-user';
+  let editId = null, pIcon = 'ti-user', sexSelect, activitySelect;
 
   function init(el){
     el.innerHTML = `
@@ -31,6 +31,8 @@
 <div id="p-list" class="list"></div>`;
 
     document.getElementById('p-activity').innerHTML = ACTIVITY.map(a => `<option value="${a.v}">${a.n}</option>`).join('');
+    sexSelect = FT.ui.select('p-sex');
+    activitySelect = FT.ui.select('p-activity');
 
     document.getElementById('p-new').addEventListener('click', () => openForm(null));
     document.getElementById('p-cancel').addEventListener('click', () => { document.getElementById('p-form').style.display = 'none'; editId = null; });
@@ -72,11 +74,11 @@
     document.getElementById('p-form-title').textContent = p ? 'Profil bearbeiten' : 'Neues Profil';
     document.getElementById('p-name').value = p ? p.name : '';
     document.getElementById('p-dob').value = p ? p.dob : '';
-    document.getElementById('p-sex').value = p ? p.sex : 'm';
+    sexSelect.setValue(p ? p.sex : 'm');
     document.getElementById('p-height').value = p ? p.heightCm : '';
     document.getElementById('p-start').value = p ? p.startWeightKg : '';
     document.getElementById('p-target').value = p ? p.targetWeightKg : '';
-    document.getElementById('p-activity').value = p ? p.activityLevel : '1.375';
+    activitySelect.setValue(String(p ? p.activityLevel : 1.375));
     renderIcons();
     document.getElementById('p-form').style.display = 'block';
     document.getElementById('p-name').focus();

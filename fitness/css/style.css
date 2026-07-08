@@ -128,6 +128,26 @@ main{flex:1;max-width:1080px;width:100%;margin:0 auto;padding:24px 28px 56px}
 
 input,select,textarea{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);font:inherit;font-size:14px;padding:9px 11px;min-height:40px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+
+/* ---------- Themebare Scrollbars (statt Browser-Standard) ---------- */
+*{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:20px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:padding-box}
+
+/* ---------- Tom Select: themebares Dropdown statt natives <select> ---------- */
+.ts-wrapper.single .ts-control,.ts-wrapper.multi .ts-control{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);min-height:40px;padding:9px 11px;box-shadow:none}
+.ts-wrapper.single .ts-control::after{border-color:var(--muted) transparent transparent transparent}
+.ts-wrapper.focus .ts-control{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.ts-dropdown{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);box-shadow:var(--shadow-2);color:var(--text);margin-top:4px}
+.ts-dropdown .ts-dropdown-content{max-height:260px}
+.ts-dropdown [data-selectable],.ts-dropdown .optgroup-header{padding:8px 12px;font-size:13.5px}
+.ts-dropdown .optgroup-header{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
+.ts-dropdown .option.active{background:var(--accent-soft);color:var(--text)}
+.ts-dropdown .option.selected{background:var(--accent);color:#fff}
+.ts-dropdown-input{background:var(--surface);color:var(--text);border-bottom:1px solid var(--border)}
+.ts-control input::placeholder{color:var(--muted)}
 button{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);font:inherit;font-size:13.5px;font-weight:500;padding:9px 15px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s,transform .1s}
 button:hover{background:var(--surface2)}
 button:active{transform:scale(.97)}

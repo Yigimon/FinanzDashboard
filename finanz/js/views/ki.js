@@ -3,7 +3,7 @@
   const { esc } = FC.ui;
   const { months, MN, IVL, mkey } = FC;
   const { totals } = FC.calc;
-  let history = [];
+  let history = [], providerSelect, modelSelect;
 
   function init(el){
     el.innerHTML = `
@@ -57,13 +57,15 @@
     const provider = FC.state.settings.aiProvider || 'anthropic';
     const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.5-flash', groq:'llama-3.3-70b-versatile' };
     modelSel.value = validModels.includes(savedModel) ? savedModel : (defaults[provider] || validModels[0]);
+    providerSelect = FC.ui.select('ki-provider');
+    modelSelect = FC.ui.select('ki-model');
     updateStatus();
     document.getElementById('ki-provider').addEventListener('change', e => {
       const provider = e.target.value;
       const cur = document.getElementById('ki-model').value;
       const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.5-flash', groq:'llama-3.3-70b-versatile' };
       const belongs = { anthropic: cur.startsWith('claude-'), google: cur.startsWith('gemini-'), groq: cur.startsWith('llama-') || cur.startsWith('mixtral-') || cur.startsWith('gemma') };
-      if (!belongs[provider]) document.getElementById('ki-model').value = defaults[provider];
+      if (!belongs[provider]) modelSelect.setValue(defaults[provider]);
       updateStatus();
     });
     document.getElementById('ki-keysave').addEventListener('click', () => {

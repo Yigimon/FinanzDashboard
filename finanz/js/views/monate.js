@@ -81,6 +81,7 @@ ${det || '<span style="font-size:12px;color:var(--muted);">Keine Posten in diese
 <td colspan="2" style="color:var(--text2);font-size:12px;">Ø Saldo: <span class="num" style="color:var(--text);">${eur(sum / 12)}</span></td>
 <td class="num ${sum >= 0 ? 'pos' : 'neg'}" style="font-weight:600;">${eur(sum)}</td></tr>`;
     document.getElementById('tbody').innerHTML = rows;
+    FC.ui.selectAll(document.getElementById('tbody'), 'select[data-f="type"], select[data-f="cat"]');
   }
 
   FC.views.monate = { init, render };

@@ -4,6 +4,7 @@
   const { months, MN, MS, IVL, mkey, curM } = FC;
   let editId = null, ncIcon = 'ti-dots';
   let search = '', filterCat = '', sortBy = 'name';
+  let typeSelect, catSelect, intervalSelect, refSelect, scopeSelect, filterCatSelect, sortSelect;
 
   function init(el){
     el.innerHTML = `
@@ -45,6 +46,11 @@
 <div id="list-out" class="list"></div>`;
 
     document.getElementById('f-ref').innerHTML = MN.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+    typeSelect = FC.ui.select('f-type');
+    intervalSelect = FC.ui.select('f-interval');
+    refSelect = FC.ui.select('f-ref');
+    scopeSelect = FC.ui.select('f-scope');
+    sortSelect = FC.ui.select('p-sort');
     document.getElementById('f-interval').addEventListener('change', syncFields);
     document.getElementById('f-type').addEventListener('change', fillCats);
     document.getElementById('f-cat').addEventListener('change', e => {
@@ -85,12 +91,14 @@
   function fillCats(){
     document.getElementById('f-cat').innerHTML =
       FC.sortedCats().map(c => `<option>${esc(c.n)}</option>`).join('') + '<option value="__new">+ Neue Kategorie…</option>';
+    catSelect = FC.ui.select('f-cat');
   }
   function fillFilterCats(){
     const sel = document.getElementById('p-filtercat');
     const cur = sel.value;
     sel.innerHTML = '<option value="">Alle Kategorien</option>' + FC.sortedCatNames().map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
     if ([...sel.options].some(o => o.value === cur)) sel.value = cur; else filterCat = '';
+    filterCatSelect = FC.ui.select('p-filtercat');
   }
   function renderIcons(){
     document.getElementById('nc-icons').innerHTML = FC.ICONS.map(ic =>
@@ -112,22 +120,22 @@
     document.getElementById('form-title').textContent = it ? 'Posten bearbeiten' : 'Neuer Posten';
     document.getElementById('f-name').value = it ? it.name : '';
     document.getElementById('f-amount').value = it ? it.amount : '';
-    document.getElementById('f-type').value = it ? it.type : 'out';
+    typeSelect.setValue(it ? it.type : 'out');
     fillCats();
     const defaultCat = it ? it.cat : (FC.state.cats.length ? FC.state.cats[0].n : '__new');
-    document.getElementById('f-cat').value = defaultCat;
+    catSelect.setValue(defaultCat);
     if (defaultCat === '__new') {
       document.getElementById('newcat-panel').style.display = 'block';
       renderIcons();
       document.getElementById('nc-name').focus();
     }
-    document.getElementById('f-interval').value = it ? String(it.interval) : '1';
-    document.getElementById('f-ref').value = it && typeof it.interval === 'number' ? it.ref : curM;
+    intervalSelect.setValue(it ? String(it.interval) : '1');
+    refSelect.setValue(String(it && typeof it.interval === 'number' ? it.ref : curM));
     document.getElementById('f-once').value = it && it.date ? it.date : mkey(months[0]) + '-01';
     document.getElementById('f-merchant').value = it && it.merchant ? it.merchant : '';
     document.getElementById('f-start').value = it && it.start ? it.start : '';
     document.getElementById('f-end').value = it && it.end ? it.end : '';
-    document.getElementById('f-scope').value = 'all';
+    scopeSelect.setValue('all');
     syncFields();
     document.getElementById('newcat-panel').style.display = 'none';
     document.getElementById('form-panel').style.display = 'block';

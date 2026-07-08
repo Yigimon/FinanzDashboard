@@ -113,6 +113,7 @@
     document.getElementById('acct-kind').innerHTML = ACCT_KINDS.map(k => `<option>${k[0]}</option>`).join('');
     document.getElementById('acct-name').value = a ? a.name : '';
     document.getElementById('acct-kind').value = a ? a.kind : ACCT_KINDS[0][0];
+    FC.ui.select('acct-kind');
     document.getElementById('acct-balance').value = a ? a.balance : '';
     document.getElementById('acct-form').style.display = 'block';
     document.getElementById('acct-name').focus();
@@ -159,6 +160,7 @@
     document.getElementById('dp-kind').innerHTML = KINDS.map(k => `<option>${k[0]}</option>`).join('');
     document.getElementById('dp-name').value = p ? p.name : '';
     document.getElementById('dp-kind').value = p ? p.kind : KINDS[0][0];
+    FC.ui.select('dp-kind');
     document.getElementById('dp-value').value = p ? p.value : '';
     document.getElementById('dp-rate').value = p ? p.rate : '';
     document.getElementById('dp-ret').value = p ? p.ret : 6;
