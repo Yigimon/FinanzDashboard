@@ -241,3 +241,18 @@ input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
 .infosep{height:1px;background:var(--border);margin:9px 0}
 .topinfo{align-self:center;width:34px;height:34px}
 .topinfo i{font-size:19px}
+
+/* Mobil: Erklärungs-Popover als breite Karte am unteren Rand */
+@media (max-width:640px){
+  .infopop.sheet{left:12px;right:12px;bottom:12px;top:auto;max-width:none;width:auto;font-size:13.5px;
+    padding:16px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:var(--shadow-2);
+    animation:sheet-up .2s ease-out}
+  @media (prefers-reduced-motion: reduce){ .infopop.sheet{animation:none} }
+}
+@keyframes sheet-up{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* Mobil: Sankey horizontal scrollbar, damit Labels lesbar bleiben */
+@media (max-width:640px){
+  .sankeybox{min-width:560px}
+  #an-sankey{-webkit-overflow-scrolling:touch}
+}

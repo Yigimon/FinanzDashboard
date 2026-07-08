@@ -121,7 +121,7 @@
     const nodeColor = k => colors[k] || A.muted;
     const rows = Math.max(left.length, right.length + (surplus >= 0.5 ? 1 : 0));
     const h = Math.max(280, rows * 52 + 40);
-    host.innerHTML = `<div class="chartbox" style="height:${h}px"><canvas id="chart-sankey" role="img" aria-label="Sankey-Diagramm des Geldflusses vom Einkommen über das Budget in die Ausgaben-Kategorien"></canvas></div>`;
+    host.innerHTML = `<div class="chartbox sankeybox" style="height:${h}px"><canvas id="chart-sankey" role="img" aria-label="Sankey-Diagramm des Geldflusses vom Einkommen über das Budget in die Ausgaben-Kategorien"></canvas></div>`;
 
     chart('chart-sankey', {
       type: 'sankey',
