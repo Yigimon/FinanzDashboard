@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script>document.write('<base href="' + (location.pathname.indexOf('/finanz') === 0 ? '/finanz/' : '/') + '">');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#12151d">
 <title>Finanz-Cockpit</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.json">
@@ -15,43 +15,80 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header class="apphead">
-<span class="applogo"><img src="favicon.svg" alt="Finanz-Cockpit Icon" class="applogo-img" /></span>
-<span style="flex:1;">
-<span class="apptitle">Finanz-Cockpit</span>
-<span class="appsub">Dein persönliches Finanz- und Vermögens-Dashboard</span>
-</span>
-<button id="theme-toggle" class="iconbtn" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten" style="font-size:20px;padding:8px;"><i class="ti ti-moon" aria-hidden="true"></i></button>
-</header>
-<nav id="tabs" aria-label="Bereiche">
-<button class="tabbtn on" data-tab="dash"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Übersicht</button>
-<button class="tabbtn" data-tab="posten"><i class="ti ti-list-details" aria-hidden="true"></i> Posten</button>
-<button class="tabbtn" data-tab="monate"><i class="ti ti-calendar-month" aria-hidden="true"></i> Monate</button>
-<button class="tabbtn" data-tab="analyse"><i class="ti ti-chart-pie" aria-hidden="true"></i> Analyse</button>
-<button class="tabbtn" data-tab="verlauf"><i class="ti ti-timeline" aria-hidden="true"></i> Verlauf</button>
-<button class="tabbtn" data-tab="tipps"><i class="ti ti-bulb" aria-hidden="true"></i> Tipps</button>
-<button class="tabbtn" data-tab="ziele"><i class="ti ti-target-arrow" aria-hidden="true"></i> Ziele</button>
-<button class="tabbtn" data-tab="erfolge"><i class="ti ti-trophy" aria-hidden="true"></i> Erfolge</button>
-<button class="tabbtn" data-tab="kalender"><i class="ti ti-calendar-event" aria-hidden="true"></i> Kalender</button>
-<button class="tabbtn" data-tab="depot"><i class="ti ti-trending-up" aria-hidden="true"></i> Depot</button>
-<button class="tabbtn" data-tab="ki"><i class="ti ti-sparkles" aria-hidden="true"></i> KI</button>
-<button class="tabbtn" data-tab="daten"><i class="ti ti-database" aria-hidden="true"></i> Daten</button>
-</nav>
-<main>
-<section id="tab-dash"></section>
-<section id="tab-posten" hidden></section>
-<section id="tab-monate" hidden></section>
-<section id="tab-analyse" hidden></section>
-<section id="tab-verlauf" hidden></section>
-<section id="tab-tipps" hidden></section>
-<section id="tab-ziele" hidden></section>
-<section id="tab-erfolge" hidden></section>
-<section id="tab-kalender" hidden></section>
-<section id="tab-depot" hidden></section>
-<section id="tab-ki" hidden></section>
-<section id="tab-daten" hidden></section>
-</main>
-<footer class="appfoot">Daten werden lokal in diesem Browser gespeichert (localStorage). Kein Server, keine Cloud.</footer>
+<a href="#main" class="skip">Zum Inhalt springen</a>
+<div class="shell">
+
+  <!-- ============ Seitenleiste ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-logo"><img src="favicon.svg" alt="" class="brand-logo-img"></span>
+      <span class="brand-text">
+        <span class="brand-title">Finanz-Cockpit</span>
+        <span class="brand-sub">Vermögens-Dashboard</span>
+      </span>
+    </div>
+
+    <nav id="tabs" aria-label="Bereiche">
+      <p class="navgroup">Überblick</p>
+      <button class="tabbtn on" data-tab="dash"><i class="ti ti-layout-dashboard" aria-hidden="true"></i><span>Übersicht</span></button>
+      <button class="tabbtn" data-tab="monate"><i class="ti ti-calendar-month" aria-hidden="true"></i><span>Monate</span></button>
+      <button class="tabbtn" data-tab="verlauf"><i class="ti ti-timeline" aria-hidden="true"></i><span>Verlauf</span></button>
+
+      <p class="navgroup">Buchungen</p>
+      <button class="tabbtn" data-tab="posten"><i class="ti ti-list-details" aria-hidden="true"></i><span>Posten</span></button>
+      <button class="tabbtn" data-tab="kalender"><i class="ti ti-calendar-event" aria-hidden="true"></i><span>Kalender</span></button>
+
+      <p class="navgroup">Analyse</p>
+      <button class="tabbtn" data-tab="analyse"><i class="ti ti-chart-pie" aria-hidden="true"></i><span>Analyse</span></button>
+      <button class="tabbtn" data-tab="tipps"><i class="ti ti-bulb" aria-hidden="true"></i><span>Tipps</span></button>
+      <button class="tabbtn" data-tab="ki"><i class="ti ti-sparkles" aria-hidden="true"></i><span>KI-Berater</span></button>
+
+      <p class="navgroup">Vermögen</p>
+      <button class="tabbtn" data-tab="depot"><i class="ti ti-trending-up" aria-hidden="true"></i><span>Depot</span></button>
+      <button class="tabbtn" data-tab="ziele"><i class="ti ti-target-arrow" aria-hidden="true"></i><span>Ziele</span></button>
+      <button class="tabbtn" data-tab="erfolge"><i class="ti ti-trophy" aria-hidden="true"></i><span>Erfolge</span></button>
+
+      <p class="navgroup">Daten</p>
+      <button class="tabbtn" data-tab="daten"><i class="ti ti-database" aria-hidden="true"></i><span>Sichern &amp; Reset</span></button>
+    </nav>
+
+    <div class="sidefoot">
+      <button id="theme-toggle" class="themetoggle" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten">
+        <i class="ti ti-moon" aria-hidden="true"></i><span>Design</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ Inhaltsbereich ============ -->
+  <div class="content">
+    <header class="topbar">
+      <button id="nav-toggle" class="navtoggle" aria-label="Menü" title="Menü"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+      <div class="topbar-head">
+        <h1 id="page-title">Übersicht</h1>
+        <p id="page-sub" class="topbar-sub"></p>
+      </div>
+    </header>
+
+    <main id="main">
+      <section id="tab-dash"></section>
+      <section id="tab-posten" hidden></section>
+      <section id="tab-monate" hidden></section>
+      <section id="tab-analyse" hidden></section>
+      <section id="tab-verlauf" hidden></section>
+      <section id="tab-tipps" hidden></section>
+      <section id="tab-ziele" hidden></section>
+      <section id="tab-erfolge" hidden></section>
+      <section id="tab-kalender" hidden></section>
+      <section id="tab-depot" hidden></section>
+      <section id="tab-ki" hidden></section>
+      <section id="tab-daten" hidden></section>
+      <footer class="appfoot">Daten werden lokal in diesem Browser gespeichert (localStorage). Kein Server, keine Cloud.</footer>
+    </main>
+  </div>
+</div>
+
+<div id="nav-scrim" class="nav-scrim" hidden></div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="js/store.js"></script>
 <script src="js/calc.js"></script>

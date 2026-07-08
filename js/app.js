@@ -1,6 +1,21 @@
 // App-Start: Tabs, Initialisierung, zentrales Re-Rendering
 (function (FC) {
   const TABS = ['dash','posten','monate','analyse','verlauf','tipps','ziele','erfolge','kalender','depot','ki','daten'];
+  // Titel + Untertitel für die Topbar je Bereich
+  const META = {
+    dash:    ['Übersicht',      'Finanzscore, Monatslage und Kennzahlen auf einen Blick'],
+    posten:  ['Posten',         'Wiederkehrende und einmalige Einnahmen & Ausgaben verwalten'],
+    monate:  ['Monate',         '12-Monats-Vorschau mit Details je Monat'],
+    analyse: ['Analyse',        'Kategorien, Sankey, Heatmap, Budgets und Trends'],
+    verlauf: ['Verlauf',        'Vermögens- und Saldo-Entwicklung über die Zeit'],
+    tipps:   ['Tipps',          'Automatische Spar- und Budget-Hinweise'],
+    ziele:   ['Ziele',          'Sparziele planen und den Fortschritt verfolgen'],
+    erfolge: ['Erfolge',        'Level, Meilensteine und Vermögens-Badges'],
+    kalender:['Kalender',       'Zahlungen nach Fälligkeit im Monat'],
+    depot:   ['Depot',          'Anlagen, Sparpläne und Prognose-Szenarien'],
+    ki:      ['KI-Berater',     'Persönliche Finanzanalyse per KI'],
+    daten:   ['Sichern & Reset','Export, Import, automatisches Backup und Zurücksetzen']
+  };
   let active = 'dash';
 
   FC.showTab = function (name) {
@@ -9,9 +24,24 @@
       document.getElementById('tab-' + t).hidden = t !== name;
       document.querySelector(`#tabs [data-tab="${t}"]`).classList.toggle('on', t === name);
     });
+    const m = META[name];
+    if (m) {
+      const tEl = document.getElementById('page-title'); if (tEl) tEl.textContent = m[0];
+      const sEl = document.getElementById('page-sub');   if (sEl) sEl.textContent = m[1];
+    }
+    closeNav();
     FC.views[name].render();
     window.scrollTo({ top: 0 });
   };
+
+  // Mobile: Seitenleiste ein-/ausblenden
+  const sidebar = document.querySelector('.sidebar');
+  const scrim = document.getElementById('nav-scrim');
+  function openNav(){ if (sidebar) sidebar.classList.add('open'); if (scrim) scrim.hidden = false; }
+  function closeNav(){ if (sidebar) sidebar.classList.remove('open'); if (scrim) scrim.hidden = true; }
+  const navToggle = document.getElementById('nav-toggle');
+  if (navToggle) navToggle.addEventListener('click', openNav);
+  if (scrim) scrim.addEventListener('click', closeNav);
 
   // Aktuellen Monat fortlaufend als Snapshot festhalten (Upsert; nur der laufende Monat wird berührt)
   FC.autoSnapshot = function () {
