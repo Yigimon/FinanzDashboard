@@ -94,7 +94,7 @@ ${top.map(([n, v]) => `<div class="trendrow"><i class="ti ${catIcon(n)}" aria-hi
 <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(n)}</span>
 <span class="pbar" style="margin:0;width:90px;flex-shrink:0;"><span style="width:${Math.round(v / totCat * 100)}%;background:var(--accent);"></span></span>
 <span class="num" style="font-weight:600;min-width:80px;text-align:right;">${eur0(v)}</span></div>`).join('')}
-${archived ? `<p class="subtext" style="margin:10px 0 0;color:var(--pos);"><i class="ti ti-lock-check" aria-hidden="true"></i> Abgeschlossen am ${new Date(archived.closedAt).toLocaleDateString('de-DE')}.</p>` : ''}`;
+${archived ? `<p class="subtext" data-live style="margin:10px 0 0;color:var(--pos);"><i class="ti ti-lock-check" aria-hidden="true"></i> Abgeschlossen am ${new Date(archived.closedAt).toLocaleDateString('de-DE')}.</p>` : ''}`;
     btn.style.display = 'inline-block';
     btn.innerHTML = `<i class="ti ti-lock" aria-hidden="true"></i> ${archived ? 'Jahr ' + selYear + ' neu abschließen' : 'Jahr ' + selYear + ' abschließen'}`;
   }

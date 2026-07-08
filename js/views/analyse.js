@@ -187,7 +187,7 @@
     }
     document.getElementById('an-heatmap').innerHTML =
       `<div class="heatgrid">${cells.join('')}</div>
-<p class="subtext" style="margin:10px 0 0;">${hint}</p>`;
+<p class="subtext" data-live style="margin:10px 0 0;">${hint}</p>`;
   }
 
   function render(){

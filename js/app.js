@@ -67,25 +67,62 @@
     if (top + pop.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - pop.offsetHeight - 6);
     pop.style.left = left + 'px'; pop.style.top = top + 'px';
   }
+  // (i)-Symbol an eine Überschrift hängen (bzw. weitere Erklärung anhängen)
+  function attachInfo(head, html){
+    let btn = head.querySelector(':scope > .infobtn');
+    if (btn) { btn._html += '<div class="infosep"></div>' + html; return; }
+    head.classList.add('has-info');
+    btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'infobtn';
+    btn.setAttribute('aria-label', 'Erklärung anzeigen');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = '<i class="ti ti-info-circle" aria-hidden="true"></i>';
+    btn._html = html;
+    btn.addEventListener('click', e => { e.stopPropagation(); showPop(btn, btn._html); });
+    head.appendChild(btn);
+  }
+
+  // (i)-Symbol neben dem Seitentitel für einleitende Tab-Erklärungen ohne Überschrift
+  let pageInfoBtn = null;
+  function ensurePageInfo(){
+    if (pageInfoBtn) return pageInfoBtn;
+    const head = document.querySelector('.topbar-head');
+    pageInfoBtn = document.createElement('button');
+    pageInfoBtn.type = 'button';
+    pageInfoBtn.className = 'infobtn topinfo';
+    pageInfoBtn.hidden = true;
+    pageInfoBtn.setAttribute('aria-label', 'Erklärung anzeigen');
+    pageInfoBtn.setAttribute('aria-expanded', 'false');
+    pageInfoBtn.innerHTML = '<i class="ti ti-info-circle" aria-hidden="true"></i>';
+    pageInfoBtn.addEventListener('click', e => { e.stopPropagation(); showPop(pageInfoBtn, pageInfoBtn._html || ''); });
+    const bar = document.querySelector('.topbar');
+    if (bar) bar.appendChild(pageInfoBtn);
+    return pageInfoBtn;
+  }
+  function updatePageInfo(root){
+    const btn = ensurePageInfo();
+    const html = root && root.dataset.leadInfo;
+    if (html) { btn._html = html; btn.hidden = false; }
+    else { btn.hidden = true; if (popBtn === btn) hidePop(); }
+  }
+
   function enhanceInfo(root){
     if (!root) return;
-    root.querySelectorAll('.sechead').forEach(head => {
-      if (head.dataset.infoDone) return;
-      const next = head.nextElementSibling;
-      if (!next || !next.classList.contains('subtext')) return;
-      head.dataset.infoDone = '1';
-      head.classList.add('has-info');
-      const html = next.innerHTML;
-      next.remove();
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'infobtn';
-      btn.setAttribute('aria-label', 'Erklärung anzeigen');
-      btn.setAttribute('aria-expanded', 'false');
-      btn.innerHTML = '<i class="ti ti-info-circle" aria-hidden="true"></i>';
-      btn.addEventListener('click', e => { e.stopPropagation(); showPop(btn, html); });
-      head.appendChild(btn);
+    const heads = Array.prototype.slice.call(root.querySelectorAll('.sechead'));
+    root.querySelectorAll('p.subtext:not([id]):not([data-live])').forEach(sub => {
+      // Nächste Überschrift in Dokumentreihenfolge, die vor dem Text steht
+      let anchor = null;
+      for (let i = 0; i < heads.length; i++) {
+        if (heads[i].compareDocumentPosition(sub) & Node.DOCUMENT_POSITION_FOLLOWING) anchor = heads[i];
+        else break;
+      }
+      const html = sub.innerHTML;
+      if (anchor) { attachInfo(anchor, html); }
+      else { root.dataset.leadInfo = (root.dataset.leadInfo ? root.dataset.leadInfo + '<div class="infosep"></div>' : '') + html; }
+      sub.remove();
     });
+    updatePageInfo(root);
   }
   FC.enhanceInfo = enhanceInfo;
 

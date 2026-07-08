@@ -238,3 +238,6 @@ input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   padding:12px 14px;font-size:12.5px;line-height:1.6}
 .infopop b{color:var(--text);font-weight:600}
 .infopop[hidden]{display:none}
+.infosep{height:1px;background:var(--border);margin:9px 0}
+.topinfo{align-self:center;width:34px;height:34px}
+.topinfo i{font-size:19px}
