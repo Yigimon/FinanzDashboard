@@ -4,5 +4,9 @@
   "installCommand": null,
   "outputDirectory": ".",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/finanz", "destination": "/finanz/index.html" },
+    { "source": "/fitness", "destination": "/fitness/index.html" }
+  ]
 }

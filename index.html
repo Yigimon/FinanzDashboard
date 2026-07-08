@@ -2,110 +2,37 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<script>document.write('<base href="' + (location.pathname.indexOf('/finanz') === 0 ? '/finanz/' : '/') + '">');</script>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#12151d">
-<title>Finanz-Cockpit</title>
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.14.0/dist/tabler-icons.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1118">
+<title>mindcrafted.me</title>
+<style>
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0e1118; --surface:#1a1e28; --border:#2b3140; --text:#eef0ec; --text2:#a9afc0; }
+  }
+  :root{ --bg:#eef0ec; --surface:#ffffff; --border:#dcdfd3; --text:#1b2130; --text2:#565f6e; }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+  main{max-width:420px;width:100%;padding:32px;}
+  h1{font-size:22px;margin:0 0 8px;}
+  p{color:var(--text2);margin:0 0 28px;font-size:14.5px;}
+  .links{display:flex;flex-direction:column;gap:12px;}
+  a{display:block;padding:16px 18px;background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;color:var(--text);text-decoration:none;font-size:15px;font-weight:600;
+    transition:transform .15s, border-color .15s;}
+  a:hover{transform:translateY(-1px);border-color:var(--text2);}
+  a span{display:block;font-weight:400;font-size:12.5px;color:var(--text2);margin-top:3px;}
+</style>
 </head>
 <body>
-<a href="#main" class="skip">Zum Inhalt springen</a>
-<div class="shell">
-
-  <!-- ============ Seitenleiste ============ -->
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="brand-logo"><img src="favicon.svg" alt="" class="brand-logo-img"></span>
-      <span class="brand-text">
-        <span class="brand-title">Finanz-Cockpit</span>
-        <span class="brand-sub">Vermögens-Dashboard</span>
-      </span>
-    </div>
-
-    <nav id="tabs" aria-label="Bereiche">
-      <p class="navgroup">Überblick</p>
-      <button class="tabbtn on" data-tab="dash"><i class="ti ti-layout-dashboard" aria-hidden="true"></i><span>Übersicht</span></button>
-      <button class="tabbtn" data-tab="monate"><i class="ti ti-calendar-month" aria-hidden="true"></i><span>Monate</span></button>
-      <button class="tabbtn" data-tab="verlauf"><i class="ti ti-timeline" aria-hidden="true"></i><span>Verlauf</span></button>
-
-      <p class="navgroup">Buchungen</p>
-      <button class="tabbtn" data-tab="posten"><i class="ti ti-list-details" aria-hidden="true"></i><span>Posten</span></button>
-      <button class="tabbtn" data-tab="kalender"><i class="ti ti-calendar-event" aria-hidden="true"></i><span>Kalender</span></button>
-
-      <p class="navgroup">Analyse</p>
-      <button class="tabbtn" data-tab="analyse"><i class="ti ti-chart-pie" aria-hidden="true"></i><span>Analyse</span></button>
-      <button class="tabbtn" data-tab="tipps"><i class="ti ti-bulb" aria-hidden="true"></i><span>Tipps</span></button>
-      <button class="tabbtn" data-tab="ki"><i class="ti ti-sparkles" aria-hidden="true"></i><span>KI-Berater</span></button>
-
-      <p class="navgroup">Vermögen</p>
-      <button class="tabbtn" data-tab="depot"><i class="ti ti-trending-up" aria-hidden="true"></i><span>Depot</span></button>
-      <button class="tabbtn" data-tab="ziele"><i class="ti ti-target-arrow" aria-hidden="true"></i><span>Ziele</span></button>
-      <button class="tabbtn" data-tab="erfolge"><i class="ti ti-trophy" aria-hidden="true"></i><span>Erfolge</span></button>
-
-      <p class="navgroup">Daten</p>
-      <button class="tabbtn" data-tab="daten"><i class="ti ti-database" aria-hidden="true"></i><span>Sichern &amp; Reset</span></button>
-    </nav>
-
-    <div class="sidefoot">
-      <button id="theme-toggle" class="themetoggle" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel umschalten">
-        <i class="ti ti-moon" aria-hidden="true"></i><span>Design</span>
-      </button>
-    </div>
-  </aside>
-
-  <!-- ============ Inhaltsbereich ============ -->
-  <div class="content">
-    <header class="topbar">
-      <button id="nav-toggle" class="navtoggle" aria-label="Menü" title="Menü"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
-      <div class="topbar-head">
-        <h1 id="page-title">Übersicht</h1>
-        <p id="page-sub" class="topbar-sub"></p>
-      </div>
-    </header>
-
-    <main id="main" tabindex="-1">
-      <section id="tab-dash"></section>
-      <section id="tab-posten" hidden></section>
-      <section id="tab-monate" hidden></section>
-      <section id="tab-analyse" hidden></section>
-      <section id="tab-verlauf" hidden></section>
-      <section id="tab-tipps" hidden></section>
-      <section id="tab-ziele" hidden></section>
-      <section id="tab-erfolge" hidden></section>
-      <section id="tab-kalender" hidden></section>
-      <section id="tab-depot" hidden></section>
-      <section id="tab-ki" hidden></section>
-      <section id="tab-daten" hidden></section>
-      <footer class="appfoot">Daten werden lokal in diesem Browser gespeichert (localStorage). Kein Server, keine Cloud.</footer>
-    </main>
+<main>
+  <h1>mindcrafted.me</h1>
+  <p>Projekte im Überblick</p>
+  <div class="links">
+    <a href="/finanz">Finanz-Cockpit<span>Vermögens-Dashboard</span></a>
+    <a href="/fitness">Fitness-Tracker<span>Gewicht &amp; Körperwerte</span></a>
   </div>
-</div>
-
-<div id="nav-scrim" class="nav-scrim" hidden></div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.1/dist/chartjs-chart-sankey.min.js"></script>
-<script src="js/store.js"></script>
-<script src="js/calc.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/views/dashboard.js"></script>
-<script src="js/views/posten.js"></script>
-<script src="js/views/monate.js"></script>
-<script src="js/views/analyse.js"></script>
-<script src="js/views/verlauf.js"></script>
-<script src="js/views/tipps.js"></script>
-<script src="js/views/ziele.js"></script>
-<script src="js/views/erfolge.js"></script>
-<script src="js/views/kalender.js"></script>
-<script src="js/views/depot.js"></script>
-<script src="js/views/ki.js"></script>
-<script src="js/views/daten.js"></script>
-<script src="js/app.js"></script>
+</main>
 </body>
 </html>
