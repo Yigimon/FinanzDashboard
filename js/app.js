@@ -22,7 +22,10 @@
     active = name;
     TABS.forEach(t => {
       document.getElementById('tab-' + t).hidden = t !== name;
-      document.querySelector(`#tabs [data-tab="${t}"]`).classList.toggle('on', t === name);
+      const nav = document.querySelector(`#tabs [data-tab="${t}"]`);
+      nav.classList.toggle('on', t === name);
+      if (t === name) nav.setAttribute('aria-current', 'page');
+      else nav.removeAttribute('aria-current');
     });
     const m = META[name];
     if (m) {
@@ -61,6 +64,13 @@
     pop.innerHTML = html;
     pop.hidden = false;
     popBtn = btn; btn.setAttribute('aria-expanded', 'true');
+    // Auf schmalen Screens als breite Karte unten am Bildschirm (per CSS-Klasse), sonst am Button verankern
+    if (window.innerWidth <= 640) {
+      pop.classList.add('sheet');
+      pop.style.left = ''; pop.style.top = '';
+      return;
+    }
+    pop.classList.remove('sheet');
     const r = btn.getBoundingClientRect();
     let left = r.right - pop.offsetWidth; if (left < 8) left = 8;
     let top = r.bottom + 6;
