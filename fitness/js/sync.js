@@ -1,7 +1,10 @@
 // Server-Sync für die Fitness-App (Turso via /api/state) + Passwort-Gate.
 (function (FT) {
   const API = '/api/state';
-  const SLICE_KEYS = ['profiles', 'weightEntries', 'settings'];
+  // Nur die geteilten Daten synchronisieren. 'settings' wird bewusst NICHT geteilt:
+  // (1) es kollidiert mit dem gleichnamigen settings-Key des Finanz-Cockpits in derselben
+  // kv-Tabelle, (2) Theme + aktives Profil sind geräte-lokale Präferenzen, kein geteilter Bestand.
+  const SLICE_KEYS = ['profiles', 'weightEntries'];
   let authed = false;
   let pw = '';
   try { pw = localStorage.getItem('ft:pw') || ''; } catch (e) { pw = ''; }

@@ -44,6 +44,12 @@
     FT.views[active].render();
   };
 
+  // Nach Übernahme eines Server-Stands (sync.js): aktuellen Tab + Theme neu aufbauen.
+  FT.reload = function () {
+    applyTheme();
+    FT.views[active].render();
+  };
+
   function applyTheme(){
     const t = FT.state.settings.theme || 'auto';
     if (t === 'auto') delete document.documentElement.dataset.theme;

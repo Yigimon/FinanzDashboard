@@ -33,6 +33,8 @@ window.FT = (function () {
     save('profiles', state.profiles);
     save('weightEntries', state.weightEntries);
     save('settings', state.settings);
+    // Geteilte DB aktualisieren (entprellt; No-op bis authentifiziert).
+    if (window.FT && FT.sync) FT.sync.push();
   }
   function nextId(list){
     return list.reduce((a, x) => Math.max(a, x.id), 0) + 1;
