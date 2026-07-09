@@ -78,7 +78,9 @@ window.FC = (function () {
   }
 
   const useEmptyStartup = load('empty', false);
-  const defaultSettings = {apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid: useEmptyStartup ? 0 : 6500, budgets:{}, theme:'auto'};
+  // sharedKeys: geteilte „öffentliche" KI-Schlüssel je Anbieter — Teil von settings, synct in die DB (für alle).
+  const AI_PROVIDERS = ['anthropic', 'google', 'groq'];
+  const defaultSettings = {apiKey:'', aiProvider:'anthropic', model:'claude-haiku-4-5-20251001', liquid: useEmptyStartup ? 0 : 6500, budgets:{}, theme:'auto', sharedKeys:{anthropic:'', google:'', groq:''}};
 
   const state = {
     items: load('items', useEmptyStartup ? [] : seedItems()),
@@ -91,6 +93,20 @@ window.FC = (function () {
     years: load('years', []),
     settings: Object.assign({}, defaultSettings, load('settings', {}))
   };
+  // sharedKeys immer vollständig (alle Anbieter-Felder vorhanden)
+  state.settings.sharedKeys = Object.assign({anthropic:'', google:'', groq:''}, state.settings.sharedKeys || {});
+
+  // Persönliche KI-Schlüssel: nur lokal (localStorage), NIE synchronisiert. Überschreiben den geteilten Key.
+  let personalKeys = Object.assign({anthropic:'', google:'', groq:''}, load('personalKeys', {}));
+  function savePersonalKeys(){ save('personalKeys', personalKeys); }
+  // Migration: alter einzelner settings.apiKey → persönlicher Key des jeweiligen Anbieters
+  // (privat halten, nicht ungewollt als geteilten Key an alle veröffentlichen).
+  if (state.settings.apiKey) {
+    const prov = state.settings.aiProvider || 'anthropic';
+    if (!personalKeys[prov]) personalKeys[prov] = state.settings.apiKey;
+    state.settings.apiKey = '';
+    savePersonalKeys();
+  }
 
   // Migration: alter Provider-Wert 'grok' → 'groq'. Ältere Stände speicherten den
   // Groq-Provider als 'grok'; die aktuelle Fetch-Logik prüft nur 'groq' und würde den
@@ -106,17 +122,28 @@ window.FC = (function () {
     }
   });
 
+  // State-Slices, die lokal gespeichert UND mit dem Server geteilt werden.
+  const SLICE_KEYS = ['items', 'cats', 'positions', 'accounts', 'goals', 'history', 'years', 'settings'];
+
   function persist(){
     localStorage.removeItem('fc:empty');
-    save('items', state.items);
-    save('cats', state.cats);
-    save('positions', state.positions);
-    save('accounts', state.accounts);
-    save('goals', state.goals);
-    save('history', state.history);
-    save('years', state.years);
-    save('settings', state.settings);
+    SLICE_KEYS.forEach(k => save(k, state[k]));
+    // Geteilte DB aktualisieren (entprellt; No-op bis authentifiziert). personalKeys bleiben lokal.
+    if (window.FC && FC.sync) FC.sync.push();
   }
+
+  // Server-Stand übernehmen: vorhandene Slices in FC.state ersetzen + lokal cachen.
+  function applyServerState(obj){
+    if (!obj) return;
+    SLICE_KEYS.forEach(k => {
+      if (obj[k] === undefined) return;
+      state[k] = obj[k];
+      save(k, obj[k]);
+    });
+    // sharedKeys nach Merge wieder vollständig sicherstellen
+    state.settings.sharedKeys = Object.assign({anthropic:'', google:'', groq:''}, state.settings.sharedKeys || {});
+  }
+
   function nextId(list){
     return list.reduce((a, x) => Math.max(a, x.id), 0) + 1;
   }
@@ -131,5 +158,7 @@ window.FC = (function () {
   }
   function sortedCatNames(){ return sortedCats().map(c => c.n); }
 
-  return { MN, MS, IVL, PIE, ICONS, KINDS, FIXCATS, curY, curM, months, mkey, state, persist, nextId, sortedCats, sortedCatNames, views:{} };
+  return { MN, MS, IVL, PIE, ICONS, KINDS, FIXCATS, AI_PROVIDERS, SLICE_KEYS, curY, curM, months, mkey, state,
+    persist, applyServerState, nextId, sortedCats, sortedCatNames,
+    personalKeys, savePersonalKeys, views:{} };
 })();

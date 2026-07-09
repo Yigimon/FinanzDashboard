@@ -165,6 +165,15 @@
     if (FC.backupWrite) FC.backupWrite();
   };
 
+  // Nach Übernahme eines Server-Stands (sync.js): Theme + aktuellen Tab neu aufbauen,
+  // ohne lokal erneut zu speichern (applyServerState hat bereits gecacht).
+  FC.reload = function () {
+    applyTheme();
+    FC.autoSnapshot();
+    FC.views[active].render();
+    enhanceInfo(document.getElementById('tab-' + active));
+  };
+
   // Theme: 'auto' folgt dem System, 'light'/'dark' übersteuern es
   function applyTheme(){
     const t = FC.state.settings.theme || 'auto';

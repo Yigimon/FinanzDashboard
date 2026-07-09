@@ -10,7 +10,6 @@
 <div class="card" style="margin-bottom:14px;">
 <p class="sechead" style="margin:0 0 8px;"><i class="ti ti-key" aria-hidden="true" style="color:var(--violet);"></i> API-Schlüssel</p>
 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-<input id="ki-key" type="password" placeholder="API Key…" style="flex:1;min-width:180px;">
 <select id="ki-provider" style="width:auto;">
 <option value="anthropic">Anthropic</option>
 <option value="google">Google AI Studio</option>
@@ -37,8 +36,12 @@
 <option value="gemma2-9b-it">Gemma2 9B — Google/Groq</option>
 </optgroup>
 </select>
-<button id="ki-keysave">Speichern</button>
 </div>
+<div class="formgrid" style="margin-top:10px;">
+<label class="lbl">Öffentlicher Schlüssel <span style="color:var(--muted);font-weight:400;">(geteilt, alle Geräte)</span><input id="ki-key-shared" type="password" placeholder="wird geteilt gespeichert" autocomplete="off"></label>
+<label class="lbl">Mein Schlüssel <span style="color:var(--muted);font-weight:400;">(nur dieses Gerät)</span><input id="ki-key-personal" type="password" placeholder="überschreibt den öffentlichen" autocomplete="off"></label>
+</div>
+<button id="ki-keysave" style="margin-top:10px;">Speichern</button>
 <p id="ki-status" class="subtext" style="margin:8px 0 0;"></p>
 </div>
 <div id="ki-suggestions" class="list" style="gap:8px;margin-bottom:14px;"></div>
@@ -48,7 +51,6 @@
 <button id="ki-send" class="primary" style="height:44px;">Fragen</button>
 </div>`;
 
-    document.getElementById('ki-key').value = FC.state.settings.apiKey || '';
     document.getElementById('ki-provider').value = FC.state.settings.aiProvider || 'anthropic';
     // Gespeichertes Modell prüfen — existiert es noch in der Auswahl?
     const modelSel = document.getElementById('ki-model');
@@ -59,6 +61,7 @@
     modelSel.value = validModels.includes(savedModel) ? savedModel : (defaults[provider] || validModels[0]);
     providerSelect = FC.ui.select('ki-provider');
     modelSelect = FC.ui.select('ki-model');
+    fillKeyFields(provider);
     updateStatus();
     document.getElementById('ki-provider').addEventListener('change', e => {
       const provider = e.target.value;
@@ -66,12 +69,18 @@
       const defaults = { anthropic:'claude-haiku-4-5-20251001', google:'gemini-2.5-flash', groq:'llama-3.3-70b-versatile' };
       const belongs = { anthropic: cur.startsWith('claude-'), google: cur.startsWith('gemini-'), groq: cur.startsWith('llama-') || cur.startsWith('mixtral-') || cur.startsWith('gemma') };
       if (!belongs[provider]) modelSelect.setValue(defaults[provider]);
+      fillKeyFields(provider);
       updateStatus();
     });
     document.getElementById('ki-keysave').addEventListener('click', () => {
-      FC.state.settings.apiKey = document.getElementById('ki-key').value.trim();
-      FC.state.settings.aiProvider = document.getElementById('ki-provider').value;
+      const provider = document.getElementById('ki-provider').value;
+      // Öffentlicher Schlüssel → settings.sharedKeys (wird geteilt/synchronisiert)
+      FC.state.settings.sharedKeys[provider] = document.getElementById('ki-key-shared').value.trim();
+      FC.state.settings.aiProvider = provider;
       FC.state.settings.model = document.getElementById('ki-model').value;
+      // Persönlicher Schlüssel → nur lokal, nie synchronisiert
+      FC.personalKeys[provider] = document.getElementById('ki-key-personal').value.trim();
+      FC.savePersonalKeys();
       FC.persist();
       updateStatus(true);
     });
@@ -87,17 +96,28 @@
     renderSuggestions();
   }
 
+  // Wirksamer Schlüssel für einen Anbieter: persönlicher (lokal) hat Vorrang vor geteiltem (DB).
+  function effectiveKey(provider){
+    const personal = (FC.personalKeys && FC.personalKeys[provider]) || '';
+    const shared = (FC.state.settings.sharedKeys && FC.state.settings.sharedKeys[provider]) || '';
+    return { key: (personal || shared).trim(), source: personal ? 'personal' : (shared ? 'shared' : 'none') };
+  }
+  function fillKeyFields(provider){
+    document.getElementById('ki-key-shared').value = (FC.state.settings.sharedKeys && FC.state.settings.sharedKeys[provider]) || '';
+    document.getElementById('ki-key-personal').value = (FC.personalKeys && FC.personalKeys[provider]) || '';
+  }
+
   function updateStatus(saved){
     const st = document.getElementById('ki-status');
-    if (FC.state.settings.apiKey) {
-      if (FC.state.settings.aiProvider === 'google') {
-        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Google AI Studio. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else if (FC.state.settings.aiProvider === 'groq') {
-        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an Groq. Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';      } else {
-        st.textContent = (saved ? 'Gespeichert. ' : '') + 'Anfragen gehen direkt an die Claude-API (Modell: ' +
-          (FC.state.settings.model.includes('haiku') ? 'Haiku' : 'Sonnet') + '). Der Schlüssel liegt im localStorage dieses Browsers — nutze die App nur auf eigenen Geräten.';
-      }
+    const provider = document.getElementById('ki-provider').value;
+    const label = { anthropic:'die Claude-API', google:'Google AI Studio', groq:'Groq' }[provider] || 'die KI-API';
+    const eff = effectiveKey(provider);
+    const prefix = saved ? 'Gespeichert. ' : '';
+    if (eff.source === 'none') {
+      st.textContent = prefix + 'Kein Schlüssel für diesen Anbieter — trage einen öffentlichen (für alle) oder persönlichen (nur hier) Schlüssel ein.';
     } else {
-      st.textContent = 'Hinterlege deinen API-Schlüssel, um den Assistenten zu nutzen.';
+      const which = eff.source === 'personal' ? 'dein persönlicher Schlüssel (nur dieses Gerät)' : 'der geteilte öffentliche Schlüssel';
+      st.textContent = prefix + 'Anfragen gehen direkt an ' + label + '. Aktiv: ' + which + '.';
     }
   }
 
@@ -238,16 +258,17 @@
   }
 
   async function ask(q){
-    if (!FC.state.settings.apiKey) {
-      msg('err', 'Kein API-Schlüssel hinterlegt. Trage oben deinen API-Schlüssel ein und klicke auf Speichern.');
+    // 'grok' als Alias von 'groq' zulassen (alte gespeicherte Stände), sonst Fehlrouting → 401
+    const provider = (FC.state.settings.aiProvider === 'grok' ? 'groq' : FC.state.settings.aiProvider) || 'anthropic';
+    const resolved = effectiveKey(provider).key;
+    if (!resolved) {
+      msg('err', 'Kein API-Schlüssel für diesen Anbieter hinterlegt. Trage oben einen öffentlichen oder persönlichen Schlüssel ein und klicke auf Speichern.');
       return;
     }
     msg('user', q);
     const wait = msg('ai', 'Denke nach…');
     history.push({ role:'user', content:q });
     try {
-      // 'grok' als Alias von 'groq' zulassen (alte gespeicherte Stände), sonst Fehlrouting → 401
-      const provider = (FC.state.settings.aiProvider === 'grok' ? 'groq' : FC.state.settings.aiProvider) || 'anthropic';
       let url, headers, body;
 
       if (provider === 'google') {
@@ -257,7 +278,7 @@
         // deuten und mit HTTP 401 ("Expected OAuth 2 access token") ablehnen — auch wenn der
         // Key gültig ist. Darum ein evtl. mitkopiertes "Bearer "-Präfix entfernen und
         // ausschließlich x-goog-api-key senden.
-        const apiKey = FC.state.settings.apiKey.replace(/^Bearer\s+/i, '').trim();
+        const apiKey = resolved.replace(/^Bearer\s+/i, '').trim();
         headers = { 'content-type':'application/json', 'x-goog-api-key': apiKey };
         const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.';
         const contents = [
@@ -270,7 +291,7 @@
         body = JSON.stringify({ contents });
       } else if (provider === 'groq') {
         url = 'https://api.groq.com/openai/v1/chat/completions';
-        const apiKey = FC.state.settings.apiKey;
+        const apiKey = resolved;
         headers = { 'content-type':'application/json', 'Authorization': apiKey.startsWith('Bearer ') ? apiKey : 'Bearer ' + apiKey };
         const systemText = 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.';
         const messages = [
@@ -280,7 +301,7 @@
         body = JSON.stringify({ model: FC.state.settings.model, messages });
       } else {
         url = 'https://api.anthropic.com/v1/messages';
-        headers = { 'content-type':'application/json', 'x-api-key':FC.state.settings.apiKey,
+        headers = { 'content-type':'application/json', 'x-api-key':resolved,
           'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' };
         body = JSON.stringify({ model: FC.state.settings.model, max_tokens: 1500,
           system: 'Du bist ein deutschsprachiger Finanzassistent in der Web-App "Finanz-Cockpit". Finanzdaten des Nutzers:\n' + fdata() + '\nAntworte knapp, konkret, mit Zahlen aus den Daten. Kein Markdown.',

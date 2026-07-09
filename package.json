@@ -1,0 +1,10 @@
+{
+  "name": "mindcrafted-apps",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Statische Apps (finanz, fitness) unter mindcrafted.me + Serverless-API für geteilte Finanz-Cockpit-Daten",
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  }
+}
