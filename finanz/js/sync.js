@@ -1,7 +1,7 @@
 // Server-Sync für den geteilten Finanz-Cockpit-Datensatz (Turso via /api/state) + Passwort-Gate.
 // localStorage bleibt Offline-Cache & sofortige UI; der Server ist die geteilte Wahrheit.
 (function (FC) {
-  const API = 'api/state';
+  const API = '/api/state';
   let authed = false;
   let pw = '';
   try { pw = localStorage.getItem('fc:pw') || ''; } catch (e) { pw = ''; }
