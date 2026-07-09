@@ -4,8 +4,9 @@
 // Auth: Header 'x-app-password' muss APP_PASSWORD entsprechen.
 import { createClient } from '@libsql/client';
 
-// Erlaubte State-Slices (entsprechen den localStorage 'fc:*'-Keys im Frontend).
-const KEYS = ['items', 'cats', 'positions', 'accounts', 'goals', 'history', 'years', 'settings'];
+// Erlaubte State-Slices (entsprechen den localStorage 'fc:*' bzw. 'ft:*'-Keys im Frontend).
+// Füge hier zusätzliche Keys hinzu, wenn weitere Apps (z.B. Fitness) synct werden sollen.
+const KEYS = ['items', 'cats', 'positions', 'accounts', 'goals', 'history', 'years', 'settings', 'profiles', 'weightEntries'];
 
 let _db = null;
 function db() {
