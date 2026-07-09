@@ -148,6 +148,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-
 .ts-dropdown-input{background:var(--surface);color:var(--text);border-bottom:1px solid var(--border)}
 .ts-control input{color:var(--text);background:transparent}
 .ts-control input::placeholder{color:var(--muted)}
+/* Klick-/Tipp-Zustand: Standard-CSS setzt hier background:#fff (weißes Feld im Dark Mode)
+   und das innere Suchfeld hat min-width:7rem, wodurch es bei langen Einträgen in eine
+   zweite Zeile umbricht und das Feld höher wird. Beides neutralisieren. */
+.ts-wrapper.single.input-active .ts-control,
+.ts-wrapper.focus .ts-control,
+.ts-wrapper.dropdown-active .ts-control{background:var(--surface)}
+.ts-control > input{min-width:0}
+.ts-wrapper.single.input-active .ts-control > .item{color:var(--muted)}
 button{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);font:inherit;font-size:13.5px;font-weight:500;padding:9px 15px;cursor:pointer;min-height:40px;transition:background .15s,border-color .15s,transform .1s}
 button:hover{background:var(--surface2)}
 button:active{transform:scale(.97)}
