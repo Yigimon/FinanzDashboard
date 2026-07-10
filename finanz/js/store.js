@@ -144,6 +144,24 @@ window.FC = (function () {
     state.settings.sharedKeys = Object.assign({anthropic:'', google:'', groq:''}, state.settings.sharedKeys || {});
   }
 
+  // Frischen Startbestand herstellen (für einen neuen, leeren Account) — wie beim Erst-Start.
+  function applySeed(){
+    state.items = seedItems();
+    state.cats = DEFAULT_CATS.slice();
+    state.positions = [];
+    state.accounts = [];
+    state.goals = [];
+    state.history = [];
+    state.years = [];
+    state.settings = Object.assign({}, defaultSettings, { sharedKeys: {anthropic:'', google:'', groq:''} });
+    SLICE_KEYS.forEach(k => save(k, state[k]));
+  }
+
+  // Lokalen Cache leeren (beim Logout — kein Datenrest des vorigen Accounts).
+  function clearCache(){
+    [...SLICE_KEYS, 'empty'].forEach(k => { try { localStorage.removeItem('fc:' + k); } catch (e) {} });
+  }
+
   function nextId(list){
     return list.reduce((a, x) => Math.max(a, x.id), 0) + 1;
   }
@@ -159,6 +177,6 @@ window.FC = (function () {
   function sortedCatNames(){ return sortedCats().map(c => c.n); }
 
   return { MN, MS, IVL, PIE, ICONS, KINDS, FIXCATS, AI_PROVIDERS, SLICE_KEYS, curY, curM, months, mkey, state,
-    persist, applyServerState, nextId, sortedCats, sortedCatNames,
+    persist, applyServerState, applySeed, clearCache, nextId, sortedCats, sortedCatNames,
     personalKeys, savePersonalKeys, views:{} };
 })();

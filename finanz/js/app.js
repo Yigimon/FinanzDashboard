@@ -190,6 +190,11 @@
     applyTheme();
     FC.views[active].render();
   });
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.hidden = false;
+    logoutBtn.addEventListener('click', () => { if (FC.logout) FC.logout(); });
+  }
 
   // Beim Start den laufenden Monat als Snapshot sicherstellen
   FC.autoSnapshot();

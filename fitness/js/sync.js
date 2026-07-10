@@ -32,9 +32,11 @@
     pushTimer = setTimeout(doPush, 600);
   }
 
+  const sliceSnapshot = () => JSON.stringify(SLICE_KEYS.map(k => FT.state[k]));
+
   async function reconcile(){
     const server = await fetchState();
-    const hasServerData = server && Object.keys(server).length > 0;
+    const hasServerData = server && SLICE_KEYS.some(k => Array.isArray(server[k]) && server[k].length);
     if (hasServerData) {
       SLICE_KEYS.forEach(k => {
         if (server[k] === undefined) return;
@@ -43,9 +45,27 @@
       try { FT.persist(); } catch (e) {}
       if (FT.reload) FT.reload();
     } else {
-      // DB leer -> push local state
+      // DB leer -> lokalen Stand hochladen
       await doPush();
     }
+    startPolling();
+  }
+
+  // Live-Sync: regelmäßig prüfen, ob ein anderes Gerät neue Profile/Einträge geschrieben hat.
+  let pollTimer = null;
+  function startPolling(){
+    if (pollTimer) return;
+    pollTimer = setInterval(async () => {
+      if (!authed) return;
+      try {
+        const server = await fetchState();
+        const before = sliceSnapshot();
+        let changed = false;
+        SLICE_KEYS.forEach(k => { if (server[k] !== undefined) { FT.state[k] = server[k]; } });
+        if (sliceSnapshot() !== before) changed = true;
+        if (changed) { try { FT.persist(); } catch (e) {} if (FT.reload) FT.reload(); }
+      } catch (e) { /* offline / 401 — stiller Ignore, nächster Tick */ }
+    }, 15000);
   }
 
   // Passwort-Overlay (einfacher Dialog)

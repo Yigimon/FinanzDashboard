@@ -38,7 +38,7 @@
 </select>
 </div>
 <div class="formgrid" style="margin-top:10px;">
-<label class="lbl">Öffentlicher Schlüssel <span style="color:var(--muted);font-weight:400;">(geteilt, alle Geräte)</span><input id="ki-key-shared" type="password" placeholder="wird geteilt gespeichert" autocomplete="off"></label>
+<label class="lbl">Konto-Schlüssel <span style="color:var(--muted);font-weight:400;">(alle deine Geräte)</span><input id="ki-key-shared" type="password" placeholder="im Konto gespeichert" autocomplete="off"></label>
 <label class="lbl">Mein Schlüssel <span style="color:var(--muted);font-weight:400;">(nur dieses Gerät)</span><input id="ki-key-personal" type="password" placeholder="überschreibt den öffentlichen" autocomplete="off"></label>
 </div>
 <button id="ki-keysave" style="margin-top:10px;">Speichern</button>
