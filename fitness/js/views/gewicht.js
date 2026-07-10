@@ -30,11 +30,6 @@
 <div id="w-list" class="list"></div>
 </div>`;
 
-    document.getElementById('w-profile').addEventListener('change', e => {
-      FT.state.settings.activeProfileId = Number(e.target.value);
-      FT.persist();
-      render();
-    });
     document.getElementById('w-new').addEventListener('click', () => openForm(null));
     document.getElementById('w-cancel').addEventListener('click', () => { document.getElementById('w-form').style.display = 'none'; editId = null; });
     document.getElementById('w-save').addEventListener('click', save);
@@ -89,14 +84,17 @@
 
   function render(){
     const profiles = FT.state.profiles;
-    const sel = document.getElementById('w-profile');
     document.getElementById('w-empty').style.display = profiles.length ? 'none' : 'block';
     document.getElementById('w-body').style.display = profiles.length ? 'block' : 'none';
-    if (!profiles.length) { sel.innerHTML = ''; FT.ui.select('w-profile'); return; }
+    if (!profiles.length) return;
     const p = activeProfile();
     if (p && p.id !== FT.state.settings.activeProfileId) { FT.state.settings.activeProfileId = p.id; FT.persist(); }
-    sel.innerHTML = profiles.map(pr => `<option value="${pr.id}"${pr.id === p.id ? ' selected' : ''}>${esc(pr.name)}</option>`).join('');
-    FT.ui.select('w-profile');
+    // Persistentes Dropdown über die Tom-Select-API — kein Neuaufbau, kein Flackern
+    FT.ui.syncSelect('w-profile', profiles.map(pr => ({ value: pr.id, text: pr.name })), p.id, v => {
+      FT.state.settings.activeProfileId = Number(v);
+      FT.persist();
+      render();
+    });
 
     const entries = FT.calc.entriesFor(p.id).slice().reverse();
     document.getElementById('w-list').innerHTML = entries.length ? entries.map(w => `
