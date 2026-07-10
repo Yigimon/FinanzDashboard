@@ -9,6 +9,9 @@
     Chart.defaults.animation.duration = reduced ? 0 : 350;
     Chart.defaults.animation.easing = 'easeOutQuart';
     Chart.defaults.font.family = "'IBM Plex Sans', system-ui, sans-serif";
+    // Offizielles Annotation-Plugin registrieren (Ziel-/Referenzlinien im Diagramm)
+    const anno = window['chartjs-plugin-annotation'];
+    if (anno) { try { Chart.register(anno); } catch (e) {} }
   }
 
   let toastWrap = null;
@@ -79,6 +82,30 @@
     return selects[id];
   }
 
+  // Persistentes Dropdown: Tom Select wird EINMAL erstellt und danach nur noch über seine
+  // API aktualisiert (Optionen + Wert) — kein Zerstören/Neubauen bei jedem render(), das war
+  // die Ursache für das „Spacken" der Nutzerauswahl. Wert wird lautlos gesetzt (keine Event-Schleife).
+  function syncSelect(id, options, value, onChange){
+    const el = document.getElementById(id);
+    if (!el || typeof TomSelect === 'undefined') return null;
+    let inst = selects[id];
+    if (!inst) {
+      el.innerHTML = '';
+      inst = new TomSelect(el, { maxOptions:null, controlInput:null });
+      selects[id] = inst;
+      if (onChange) inst.on('change', v => onChange(v));
+    }
+    const key = options.map(o => o.value + '' + o.text).join('');
+    if (inst._optKey !== key) {
+      inst.clearOptions();
+      options.forEach(o => inst.addOption({ value: String(o.value), text: o.text }));
+      inst.refreshOptions(false);
+      inst._optKey = key;
+    }
+    if (value != null && inst.getValue() !== String(value)) inst.setValue(String(value), true);
+    return inst;
+  }
+
   function tile(label, value, cls, sub){
     return `<div class="tile"><p class="tl">${label}</p><p class="tv num ${cls || ''}">${value}</p>${sub ? `<p class="ts">${sub}</p>` : ''}</div>`;
   }
@@ -87,5 +114,5 @@
     return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
 
-  FT.ui = { kg, num1, $, ax, isDark, chart, select, tile, esc, toast };
+  FT.ui = { kg, num1, $, ax, isDark, chart, select, syncSelect, tile, esc, toast };
 })(window.FT);

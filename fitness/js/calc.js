@@ -63,6 +63,56 @@
     return bmrVal * activityLevel;
   }
 
+  // Fettfreie Masse & Fettmasse (kg) aus geschätztem Körperfettanteil
+  function leanBodyMass(weightKg, bodyFatPct){
+    if (!weightKg || bodyFatPct == null) return null;
+    return weightKg * (1 - bodyFatPct / 100);
+  }
+  function fatMass(weightKg, bodyFatPct){
+    if (!weightKg || bodyFatPct == null) return null;
+    return weightKg * (bodyFatPct / 100);
+  }
+
+  // Katch-McArdle: genauer als Mifflin-St-Jeor, sobald die fettfreie Masse bekannt ist
+  function bmrKatch(lbmKg){
+    if (!lbmKg) return null;
+    return 370 + 21.6 * lbmKg;
+  }
+
+  // Taille-zu-Größe-Verhältnis (WHtR) — laut Studien besserer Gesundheitsindikator als BMI
+  function whtr(waistCm, heightCm){
+    if (!waistCm || !heightCm) return null;
+    return waistCm / heightCm;
+  }
+  function whtrCategory(v){
+    if (v == null) return '';
+    if (v < 0.4) return 'Niedrig';
+    if (v < 0.5) return 'Gesund';
+    if (v < 0.6) return 'Erhöht';
+    return 'Hoch';
+  }
+
+  // Idealgewichts-Spanne für Normalgewicht (BMI 18,5–24,9)
+  function idealWeightRange(heightCm){
+    if (!heightCm) return null;
+    const h = heightCm / 100;
+    return { min: 18.5 * h * h, max: 24.9 * h * h };
+  }
+
+  // Empfohlene Tageskalorien für ein gesundes Tempo (0,5 kg/Woche ≈ 550 kcal/Tag; 7700 kcal/kg)
+  // mit Sicherheitsuntergrenze (nie unter Grundumsatz bzw. 1200/1500 kcal)
+  function calorieTarget(tdeeVal, bmrVal, currentWeight, targetWeight, sex){
+    if (tdeeVal == null || !currentWeight || !targetWeight) return null;
+    const diff = currentWeight - targetWeight;
+    if (Math.abs(diff) < 0.5) return { kcal: Math.round(tdeeVal), mode: 'maintenance', ratePerWeek: 0 };
+    const loss = diff > 0;
+    const dailyAdjust = 0.5 * 7700 / 7; // ≈ 550 kcal/Tag
+    let kcal = loss ? tdeeVal - dailyAdjust : tdeeVal + dailyAdjust;
+    const floor = Math.max(bmrVal || 0, sex === 'f' ? 1200 : 1500);
+    if (loss && kcal < floor) kcal = floor;
+    return { kcal: Math.round(kcal), mode: loss ? 'deficit' : 'surplus', ratePerWeek: loss ? -0.5 : 0.5 };
+  }
+
   // Gleitender Durchschnitt der letzten N Tage (ab dem jüngsten Eintrag)
   function movingAvg(entries, days){
     if (!entries.length) return null;
@@ -105,5 +155,7 @@
     return { weeks, date };
   }
 
-  FT.calc = { entriesFor, latestEntry, ageFromDob, bmi, bmiCategory, bodyFatNavy, bmr, tdee, movingAvg, trendRatePerWeek, etaWeeks };
+  FT.calc = { entriesFor, latestEntry, ageFromDob, bmi, bmiCategory, bodyFatNavy, bmr, tdee,
+    leanBodyMass, fatMass, bmrKatch, whtr, whtrCategory, idealWeightRange, calorieTarget,
+    movingAvg, trendRatePerWeek, etaWeeks };
 })(window.FT);
