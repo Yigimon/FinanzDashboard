@@ -31,8 +31,23 @@ export function ensureSchema() {
       `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`
     ];
     for (const s of ddl) await db().execute(s);
+    await seedAdmin();
   })();
   return schemaReady;
+}
+
+async function seedAdmin() {
+  const rs = await db().execute({ sql: 'SELECT id FROM users WHERE username = ?', args: ['admin'] });
+  if (rs.rows.length) return;
+  await db().execute({ sql: 'INSERT INTO users (username, pw_hash, data_version, created_at) VALUES (?,?,0,?)',
+    args: ['admin', hashPassword('admin'), Date.now()] });
+}
+
+// Adminrechte sind an den festen Benutzernamen "admin" gebunden (kein Rollen-Feld nötig).
+export async function isAdmin(userId) {
+  if (!userId) return false;
+  const rs = await db().execute({ sql: 'SELECT username FROM users WHERE id = ?', args: [userId] });
+  return rs.rows.length > 0 && rs.rows[0].username === 'admin';
 }
 
 // ---------- Passwort-Hashing (scrypt + Salt, timing-safe) ----------

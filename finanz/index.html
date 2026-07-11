@@ -51,6 +51,9 @@
 
       <p class="navgroup">Daten</p>
       <button class="tabbtn" data-tab="daten"><i class="ti ti-database" aria-hidden="true"></i><span>Sichern &amp; Reset</span></button>
+
+      <p class="navgroup" id="navgroup-admin" hidden>Admin</p>
+      <button class="tabbtn" data-tab="admin" id="nav-admin" hidden><i class="ti ti-shield-lock" aria-hidden="true"></i><span>Admin</span></button>
     </nav>
 
     <div class="sidefoot">
@@ -86,6 +89,7 @@
       <section id="tab-depot" hidden></section>
       <section id="tab-ki" hidden></section>
       <section id="tab-daten" hidden></section>
+      <section id="tab-admin" hidden></section>
       <footer class="appfoot">Daten werden geräteübergreifend in einer geschützten Datenbank gespeichert und lokal zwischengespeichert.</footer>
     </main>
   </div>
@@ -111,6 +115,7 @@
 <script src="js/views/depot.js"></script>
 <script src="js/views/ki.js"></script>
 <script src="js/views/daten.js"></script>
+<script src="js/views/admin.js"></script>
 <script src="js/app.js"></script>
 <script src="js/sync.js"></script>
 </body>

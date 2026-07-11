@@ -1,6 +1,6 @@
 // App-Start: Tabs, Initialisierung, zentrales Re-Rendering
 (function (FC) {
-  const TABS = ['dash','posten','monate','analyse','verlauf','tipps','ziele','erfolge','kalender','depot','ki','daten'];
+  const TABS = ['dash','posten','monate','analyse','verlauf','tipps','ziele','erfolge','kalender','depot','ki','daten','admin'];
   // Titel + Untertitel für die Topbar je Bereich
   const META = {
     dash:    ['Übersicht',      'Finanzscore, Monatslage und Kennzahlen auf einen Blick'],
@@ -14,7 +14,8 @@
     kalender:['Kalender',       'Zahlungen nach Fälligkeit im Monat'],
     depot:   ['Depot',          'Anlagen, Sparpläne und Prognose-Szenarien'],
     ki:      ['KI-Berater',     'Persönliche Finanzanalyse per KI'],
-    daten:   ['Sichern & Reset','Export, Import, automatisches Backup und Zurücksetzen']
+    daten:   ['Sichern & Reset','Export, Import, automatisches Backup und Zurücksetzen'],
+    admin:   ['Admin',          'Nutzerverwaltung']
   };
   let active = 'dash';
 

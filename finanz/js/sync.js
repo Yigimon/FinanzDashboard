@@ -97,6 +97,19 @@
   // Nach erfolgreichem Login/Registrierung: Server-Stand laden (oder neuen Account seeden).
   async function afterAuth(){
     authed = true;
+    // Silent-Boot mit gespeichertem Token kennt username noch nicht — nachladen.
+    if (!username) {
+      try {
+        const me = await (await fetch(AUTH, { method: 'POST', headers: authHeaders(),
+          body: JSON.stringify({ action: 'me' }) })).json();
+        username = me.username || '';
+      } catch (e) { /* egal, dann bleibt Admin-Bereich verborgen */ }
+    }
+    FC.isAdmin = username === 'admin';
+    const nav = document.getElementById('nav-admin');
+    const navGroup = document.getElementById('navgroup-admin');
+    if (nav) nav.hidden = !FC.isAdmin;
+    if (navGroup) navGroup.hidden = !FC.isAdmin;
     const server = await fetchState();
     if (hasData(server)) {
       applyState(server);
@@ -203,5 +216,6 @@
   }
 
   FC.sync = { push };
+  FC.authHeaders = authHeaders;
   boot();
 })(window.FC);
