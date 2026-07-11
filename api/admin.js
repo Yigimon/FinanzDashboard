@@ -141,7 +141,11 @@ async function action(adminId, body) {
     case 'export-db': {
       const dump = { app: 'finanz-cockpit-admin', version: 1, exportedAt: Date.now(), tables: {} };
       for (const t of ALL_TABLES) {
-        try { dump.tables[t] = (await db().execute(`SELECT * FROM ${t}`)).rows.map(r => ({ ...r })); } catch { dump.tables[t] = []; }
+        try {
+          const rs = await db().execute(`SELECT * FROM ${t}`);
+          // Nur benannte Spalten übernehmen (libsql-Rows sind array-artig — sonst numerische Keys).
+          dump.tables[t] = rs.rows.map(r => Object.fromEntries(rs.columns.map(c => [c, r[c]])));
+        } catch { dump.tables[t] = []; }
       }
       await logAudit(actor, 'export-db', '', '');
       return { status: 200, body: dump };
