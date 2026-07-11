@@ -10,6 +10,7 @@
   let username = '';
   let version = 0;
   let authed = false;
+  let allowSeed = true;
   let pushTimer = null, pushPending = false, pollTimer = null;
 
   const authHeaders = () => ({ 'content-type': 'application/json', 'Authorization': 'Bearer ' + token });
@@ -114,14 +115,35 @@
     if (hasData(server)) {
       applyState(server);
     } else {
-      // Leerer Account → frischen Startbestand anlegen und hochladen.
+      // Leerer Account → seeden (Demo) oder leer starten (seed_new_users=aus).
       version = typeof server.version === 'number' ? server.version : 0;
-      FC.applySeed();
+      if (allowSeed !== false) FC.applySeed(); else FC.applyEmpty();
       if (FC.reload) FC.reload();
       await doPush(0);
     }
     removeOverlay();
+    showImpersonationBanner();
     startPolling();
+  }
+
+  // Admin-Impersonation: liegt ein gemerkter Admin-Token vor, Rückkehr-Leiste zeigen.
+  function showImpersonationBanner(){
+    let adminTok = '';
+    try { adminTok = localStorage.getItem('fc:admintoken') || ''; } catch (e) {}
+    if (!adminTok || document.getElementById('imp-banner')) return;
+    const bar = document.createElement('div');
+    bar.id = 'imp-banner';
+    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:900;background:var(--warn);color:#fff;padding:6px 12px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:12px;';
+    bar.innerHTML = 'Angemeldet als <b>' + esc(username) + '</b> (Admin-Ansicht) <button id="imp-back" style="min-height:0;padding:3px 10px;background:#fff;color:var(--warn);border:none;border-radius:6px;font-weight:600;cursor:pointer;">Zurück zu Admin</button>';
+    document.body.appendChild(bar);
+    document.getElementById('imp-back').addEventListener('click', () => {
+      try {
+        localStorage.setItem('fc:token', adminTok);
+        localStorage.removeItem('fc:admintoken');
+      } catch (e) {}
+      FC.clearCache();
+      location.reload();
+    });
   }
 
   function handleAuthLost(){
@@ -185,6 +207,7 @@
       const j = await res.json();
       if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
       token = j.token; username = j.username;
+      if (mode === 'register') allowSeed = j.seed !== false;
       try { localStorage.setItem('fc:token', token); } catch (e) {}
       await afterAuth();
     } catch (e) {

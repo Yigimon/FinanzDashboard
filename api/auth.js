@@ -1,6 +1,6 @@
 // Auth-Endpoint für Finanz-Cockpit-Accounts.
 // POST /api/auth  Body { action: 'register'|'login'|'logout'|'me', username, password }
-import { db, ensureSchema, hashPassword, verifyPassword, newToken, userIdFromRequest, readBody } from './_db.js';
+import { db, ensureSchema, hashPassword, verifyPassword, newToken, userIdFromRequest, readBody, getSetting, logAudit } from './_db.js';
 import { writeSlices } from './_finance.js';
 
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 90; // 90 Tage
@@ -36,6 +36,11 @@ async function register(body, res) {
   if (username.length < 3) { res.status(400).json({ error: 'Benutzername zu kurz (min. 3 Zeichen).' }); return; }
   if (password.length < 6) { res.status(400).json({ error: 'Passwort zu kurz (min. 6 Zeichen).' }); return; }
 
+  // Registrierung global abschaltbar (admin). "admin" darf immer entstehen (Seed).
+  if (username !== 'admin' && (await getSetting('registration_enabled', '1')) !== '1') {
+    res.status(403).json({ error: 'Registrierung derzeit deaktiviert.' }); return;
+  }
+
   const exists = await db().execute({ sql: 'SELECT id FROM users WHERE username = ?', args: [username] });
   if (exists.rows.length) { res.status(409).json({ error: 'Benutzername bereits vergeben.' }); return; }
 
@@ -45,18 +50,32 @@ async function register(body, res) {
 
   const migrated = await claimLegacyIfFirst(userId);
   const token = await createSession(userId);
-  res.status(200).json({ token, username, migrated });
+  await touchLogin(userId);
+  const seed = (await getSetting('seed_new_users', '1')) === '1';
+  await logAudit(username, 'register', username, '');
+  res.status(200).json({ token, username, migrated, seed });
 }
 
 async function login(body, res) {
   const username = String(body.username || '').trim();
   const password = String(body.password || '');
-  const rs = await db().execute({ sql: 'SELECT id, pw_hash FROM users WHERE username = ?', args: [username] });
-  if (!rs.rows.length || !verifyPassword(password, rs.rows[0].pw_hash)) {
-    res.status(401).json({ error: 'Benutzername oder Passwort falsch.' }); return;
-  }
-  const token = await createSession(Number(rs.rows[0].id));
+  const rs = await db().execute({ sql: 'SELECT id, pw_hash, blocked FROM users WHERE username = ?', args: [username] });
+  const ok = !!(rs.rows.length && verifyPassword(password, rs.rows[0].pw_hash));
+  await logAttempt(username, ok ? 1 : 0);
+  if (!ok) { res.status(401).json({ error: 'Benutzername oder Passwort falsch.' }); return; }
+  if (Number(rs.rows[0].blocked)) { res.status(403).json({ error: 'Konto gesperrt.' }); return; }
+  const userId = Number(rs.rows[0].id);
+  const token = await createSession(userId);
+  await touchLogin(userId);
   res.status(200).json({ token, username });
+}
+
+async function touchLogin(userId) {
+  try { await db().execute({ sql: 'UPDATE users SET last_login = ? WHERE id = ?', args: [Date.now(), userId] }); } catch (e) {}
+}
+async function logAttempt(username, ok) {
+  try { await db().execute({ sql: 'INSERT INTO login_attempts (ts, username, ok, ip) VALUES (?,?,?,?)',
+    args: [Date.now(), username, ok, ''] }); } catch (e) {}
 }
 
 async function logout(req, res) {

@@ -28,12 +28,33 @@ export function ensureSchema() {
       `CREATE TABLE IF NOT EXISTS history (user_id INTEGER, month TEXT, inc REAL, exp REAL, saldo REAL, depot REAL, liquid REAL, by_cat_json TEXT, PRIMARY KEY(user_id,month))`,
       `CREATE TABLE IF NOT EXISTS years (user_id INTEGER, year TEXT, data_json TEXT, PRIMARY KEY(user_id,year))`,
       `CREATE TABLE IF NOT EXISTS settings (user_id INTEGER PRIMARY KEY, data_json TEXT)`,
-      `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`
+      `CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)`,
+      `CREATE TABLE IF NOT EXISTS audit (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, actor TEXT, action TEXT, target TEXT, detail TEXT)`,
+      `CREATE TABLE IF NOT EXISTS login_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, username TEXT, ok INTEGER, ip TEXT)`
     ];
     for (const s of ddl) await db().execute(s);
+    // Nachträgliche Spalten für bestehende (bereits deployte) users-Tabelle — Fehler ignorieren wenn schon da.
+    await tryExec('ALTER TABLE users ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0');
+    await tryExec('ALTER TABLE users ADD COLUMN last_login INTEGER');
+    await db().execute("INSERT OR IGNORE INTO meta (k, v) VALUES ('registration_enabled', '1')");
+    await db().execute("INSERT OR IGNORE INTO meta (k, v) VALUES ('seed_new_users', '1')");
     await seedAdmin();
   })();
   return schemaReady;
+}
+
+async function tryExec(sql) { try { await db().execute(sql); } catch (e) { /* Spalte existiert bereits */ } }
+
+export async function getSetting(key, fallback) {
+  const rs = await db().execute({ sql: 'SELECT v FROM meta WHERE k = ?', args: [key] });
+  return rs.rows.length ? rs.rows[0].v : fallback;
+}
+export async function setSetting(key, value) {
+  await db().execute({ sql: "INSERT INTO meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v", args: [key, String(value)] });
+}
+export async function logAudit(actor, action, target, detail) {
+  try { await db().execute({ sql: 'INSERT INTO audit (ts, actor, action, target, detail) VALUES (?,?,?,?,?)',
+    args: [Date.now(), actor || '', action || '', target || '', detail || ''] }); } catch (e) {}
 }
 
 async function seedAdmin() {
