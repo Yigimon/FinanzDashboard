@@ -15,6 +15,14 @@
 
   const authHeaders = () => ({ 'content-type': 'application/json', 'Authorization': 'Bearer ' + token });
 
+  // Antwort als JSON lesen; liefert der Server HTML (z.B. 404 ohne laufende API), klare Meldung
+  // statt "Unexpected token '<'".
+  async function jsonOrThrow(res){
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (e) { throw new Error('API nicht erreichbar (HTTP ' + res.status + '). Läuft das Deployment mit /api-Functions?'); }
+  }
+
   async function fetchState(){
     const res = await fetch(FIN, { headers: authHeaders() });
     if (res.status === 401) { const e = new Error('unauthorized'); e.code = 401; throw e; }
@@ -204,7 +212,7 @@
     try {
       const res = await fetch(AUTH, { method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: mode, username: user, password: pass }) });
-      const j = await res.json();
+      const j = await jsonOrThrow(res);
       if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
       token = j.token; username = j.username;
       if (mode === 'register') allowSeed = j.seed !== false;
