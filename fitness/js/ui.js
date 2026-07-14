@@ -12,6 +12,9 @@
     // Offizielles Annotation-Plugin registrieren (Ziel-/Referenzlinien im Diagramm)
     const anno = window['chartjs-plugin-annotation'];
     if (anno) { try { Chart.register(anno); } catch (e) {} }
+    // Zoom-Plugin (Wheel/Pinch/Pan) für den Gewichtsverlauf
+    const zoom = window['chartjs-plugin-zoom'] || window.ChartZoom;
+    if (zoom) { try { Chart.register(zoom.default || zoom); } catch (e) {} }
   }
 
   let toastWrap = null;

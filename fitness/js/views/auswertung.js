@@ -83,17 +83,26 @@
       if (ideal) annotations.idealband = { type: 'box', yMin: ideal.min, yMax: ideal.max,
         backgroundColor: 'rgba(31,122,92,0.08)', borderWidth: 0 };
 
-      chart('chart-gewicht', {
+      const inst = chart('chart-gewicht', {
         data: { labels: entries.map(e => e.date), datasets: [
           { type: 'line', label: 'Gewicht', data: entries.map(e => e.weightKg), borderColor: '#c1552f',
             backgroundColor: '#c1552f1a', fill: true, borderWidth: 2, pointRadius: 3, tension: .25 }
         ]},
         options: { responsive: true, maintainAspectRatio: false,
           plugins: { legend: { display: false }, annotation: { annotations },
-            tooltip: { callbacks: { label: c => kg(c.parsed.y) } } },
+            tooltip: { callbacks: { label: c => kg(c.parsed.y) } },
+            // Interaktiver Zoom auf das Werteband (Mausrad/Pinch), Verschieben per Ziehen.
+            // Nur Y-Achse; 0 bleibt harte Untergrenze. Doppelklick setzt zurück.
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'y' },
+              pan: { enabled: true, mode: 'y' },
+              limits: { y: { min: 0, max: yMax } }
+            } },
           scales: { x: { ticks: { color: A.muted, maxTicksLimit: 8 }, grid: { display: false }, border: { color: A.grid } },
             y: { min: 0, max: yMax, ticks: { color: A.muted, callback: v => num1(v) + ' kg' }, grid: { color: A.grid }, border: { color: A.grid } } } }
       });
+      const cv = document.getElementById('chart-gewicht');
+      if (cv && inst && inst.resetZoom) cv.ondblclick = () => inst.resetZoom();
     } else {
       const c = document.getElementById('chart-gewicht');
       const cx = c && c.getContext('2d');
